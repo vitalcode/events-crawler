@@ -1,7 +1,7 @@
 name := """events-fetcher"""
 organization := "Vitaliy Kuznetsov & Lesia Mirchenko"
 version := "0.0.1"
-scalaVersion := "2.10.6"
+scalaVersion := "2.11.7"
 
 resolvers ++= Seq(
     "Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/",
@@ -14,7 +14,8 @@ libraryDependencies ++= {
     val zooV = s"3.4.5-$clouderaV"
     val hadoopV = s"2.6.0-$clouderaV"
     val hbaseV = s"1.0.0-$clouderaV"
-
+    val scalaTestV = "2.2.5"
+    val scalaLoggingV = "3.1.0"
 
     Seq(
         "org.apache.hbase" % "hbase" % hbaseV,
@@ -31,6 +32,10 @@ libraryDependencies ++= {
 
         "org.jodd" % "jodd-lagarto" % joddV,
         "org.jodd" % "jodd-core" % joddV,
-        "org.jodd" % "jodd-log" % joddV
+        "org.jodd" % "jodd-log" % joddV,
+
+        "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV,
+
+        "org.scalatest" %% "scalatest" % scalaTestV % "test"
     )
 }

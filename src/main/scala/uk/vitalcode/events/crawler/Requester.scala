@@ -8,44 +8,31 @@ import akka.stream.scaladsl.ImplicitMaterializer
 import akka.util.ByteString
 import jodd.jerry.Jerry
 import jodd.jerry.Jerry._
-import org.apache.commons.codec.digest.DigestUtils
-import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.{Connection, Put, Table}
-import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.client.Connection
+import uk.vitalcode.events.crawler.model.Page
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class Requester(connection: Connection) extends Actor with ImplicitMaterializer with ActorLogging {
+    this: HBaseService =>
 
     implicit val system = ActorSystem()
 
-    def hbaseTest(url: String, page: String) = {
-
-        val table: Table = connection.getTable(TableName.valueOf("page"))
-
-        val put: Put = new Put(Bytes.toBytes(url))
-
-        put.addColumn(Bytes.toBytes("content"), Bytes.toBytes("page"), Bytes.toBytes(page))
-        put.addColumn(Bytes.toBytes("content"), Bytes.toBytes("hash"), Bytes.toBytes(DigestUtils.sha1Hex(page)))
-
-        table.put(put)
-
-        table.close()
-    }
-
     def receive = {
-        case link1: Link =>
+        case pageObj1: Page =>
 
-            log.info(s"requester link with id:${link1.id}")
+            val pageObj = pageObj1
 
-            require(link1.url != null)
+            log.info(s"requester page:${pageObj.id}")
+
+            require(pageObj.url != null)
 
             val send = sender
 
             val timeout = 3000.millis
-            val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = link1.url))
+            val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = pageObj.url))
 
             responseFuture.map(response => response.status match {
                 case OK =>
@@ -53,23 +40,22 @@ class Requester(connection: Connection) extends Actor with ImplicitMaterializer 
                         _.data
                     }
                     val s: Future[String] = bs.map(_.utf8String)
-                    s.map(page => {
+                    s.map(pageHtml => {
 
-                        log.info(page)
+                        //log.info(pageHtml)
+                        saveData(connection, pageObj.url, pageHtml)
 
-                        hbaseTest(link1.url, page)
+                        val doc: Jerry = jerry(pageHtml)
+                        val childPage: Page = if (pageObj.pages != null && pageObj.pages.nonEmpty) pageObj.pages.head else null
 
-                        val doc: Jerry = jerry(page)
-                        val childLink: Link = if (link1.links != null) link1.links.toList.head else null
+                        if (childPage != null) {
+                            log.info(s"child css:${childPage.link}")
 
-                        if (childLink != null) {
-                            log.info(s"child css:${childLink.css}")
-
-                            val childUrl = doc.$(childLink.css).attr("href")
+                            val childUrl = doc.$(childPage.link).attr("href")
                             log.info(s"child url:$childUrl")
 
-                            val newChildLink = Link(childLink.id, childUrl, childLink.css, childLink.links)
-                            send ! newChildLink
+                            val newChildPage = Page(childPage.id, childUrl, childPage.link, childPage.props, childPage.pages, childPage.isRow)
+                            send ! newChildPage
                         }
                         else send ! false
                     })

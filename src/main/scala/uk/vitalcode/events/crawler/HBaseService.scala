@@ -2,18 +2,26 @@ package uk.vitalcode.events.crawler
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.codec.digest.DigestUtils
-import org.apache.hadoop.hbase.TableName
-import org.apache.hadoop.hbase.client.{Connection, Put, Table}
+import org.apache.hadoop.conf.Configuration
+import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
+import org.apache.hadoop.hbase.client.{ConnectionFactory, Connection, Put, Table}
 import org.apache.hadoop.hbase.util.Bytes
 
 trait HBaseService {
 
-    def saveData(connection: Connection, url: String, page: String)
+    def saveData(url: String, page: String)
 }
 
-trait DefaultHBaseService extends HBaseService with LazyLogging {
+class DefaultHBaseService extends HBaseService with LazyLogging {
 
-    override def saveData(connection: Connection, url: String, page: String) = {
+    val conf: Configuration = HBaseConfiguration.create()
+    conf.clear()
+    conf.set("hbase.zookeeper.quorum", "robot1.vk,robot2.vk,robot3.vk")
+
+    val connection: Connection = ConnectionFactory.createConnection(conf)
+
+
+    override def saveData(url: String, page: String) = {
 
         val maxLogLenght = 100
 
@@ -33,9 +41,10 @@ trait DefaultHBaseService extends HBaseService with LazyLogging {
     }
 }
 
-trait TestHBaseService extends HBaseService with LazyLogging {
+class TestHBaseService extends HBaseService with LazyLogging {
 
-    override def saveData(connection: Connection, url: String, page: String) = {
+
+    override def saveData(url: String, page: String) = {
         val maxLogLenght = 100
 
         logger.info(s"Url: $url")

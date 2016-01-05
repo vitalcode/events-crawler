@@ -6,6 +6,8 @@ import uk.vitalcode.events.crawler.model.Page
 
 class Manager(requester: ActorRef, page: Page) extends Actor with ImplicitMaterializer with ActorLogging {
 
+    var completed: Boolean = false
+
     def receive = {
         case page: Page =>
             log.info(s"Manager got page:$page")
@@ -15,6 +17,7 @@ class Manager(requester: ActorRef, page: Page) extends Actor with ImplicitMateri
             requester ! page
         case strop: Boolean =>
             log.info("Manager completed job")
+            completed = true
     }
 }
 

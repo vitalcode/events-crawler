@@ -5,7 +5,8 @@ scalaVersion := "2.11.7"
 
 resolvers ++= Seq(
     "Hadoop Releases" at "https://repository.cloudera.com/content/repositories/releases/",
-    "Cloudera" at "https://repository.cloudera.com/artifactory/public/"
+    "Cloudera" at "https://repository.cloudera.com/artifactory/public/",
+    "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots"
 )
 
 libraryDependencies ++= {
@@ -16,6 +17,10 @@ libraryDependencies ++= {
     val hbaseV = s"1.0.0-$clouderaV"
     val scalaTestV = "2.2.5"
     val scalaLoggingV = "3.1.0"
+    val akkaV = "2.3.12"
+    val akkaHttpV = "1.0"
+    val scalamock = "3.2"
+    val macwireV = "2.2.2"
 
     Seq(
         "org.apache.hbase" % "hbase" % hbaseV,
@@ -26,9 +31,10 @@ libraryDependencies ++= {
         "org.apache.hadoop" % "hadoop-common" % hadoopV excludeAll ExclusionRule(organization = "javax.servlet"),
         "org.apache.hadoop" % "hadoop-client" % hadoopV excludeAll ExclusionRule(organization = "javax.servlet") exclude("com.google.guava", "guava"),
 
-        "com.typesafe.akka" %% "akka-actor" % "2.3.12",
-        "com.typesafe.akka" %% "akka-stream-experimental" % "1.0",
-        "com.typesafe.akka" %% "akka-http-experimental" % "1.0",
+        "com.typesafe.akka" %% "akka-actor" % akkaV,
+        "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
+        "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
+        "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
 
         "org.jodd" % "jodd-lagarto" % joddV,
         "org.jodd" % "jodd-core" % joddV,
@@ -36,6 +42,11 @@ libraryDependencies ++= {
 
         "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV,
 
-        "org.scalatest" %% "scalatest" % scalaTestV % "test"
+        "com.softwaremill.macwire" %% "macros" % macwireV % "provided",
+        "com.softwaremill.macwire" %% "util" % macwireV,
+        "com.softwaremill.macwire" %% "proxy" % macwireV,
+
+        "org.scalatest" %% "scalatest" % scalaTestV % "test",
+        "org.scalamock" %% "scalamock-scalatest-support" % scalamock % "test"
     )
 }

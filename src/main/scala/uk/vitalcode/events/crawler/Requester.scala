@@ -1,22 +1,19 @@
 package uk.vitalcode.events.crawler
 
 import akka.actor.{Actor, ActorLogging, ActorSystem}
-import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.StatusCodes._
 import akka.http.scaladsl.model._
 import akka.stream.scaladsl.ImplicitMaterializer
 import akka.util.ByteString
 import jodd.jerry.Jerry
 import jodd.jerry.Jerry._
-import org.apache.hadoop.hbase.client.Connection
 import uk.vitalcode.events.crawler.model.Page
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class Requester(connection: Connection) extends Actor with ImplicitMaterializer with ActorLogging {
-    this: HBaseService =>
+class Requester(httpClient: HttpClient, hBaseService: HBaseService) extends Actor with ImplicitMaterializer with ActorLogging {
 
     implicit val system = ActorSystem()
 
@@ -32,7 +29,10 @@ class Requester(connection: Connection) extends Actor with ImplicitMaterializer 
             val send = sender
 
             val timeout = 3000.millis
-            val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = pageObj.url))
+
+            //            val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = pageObj.url))
+
+            val responseFuture: Future[HttpResponse] = httpClient.makeRequest(pageObj.url)
 
             responseFuture.map(response => response.status match {
                 case OK =>
@@ -43,7 +43,7 @@ class Requester(connection: Connection) extends Actor with ImplicitMaterializer 
                     s.map(pageHtml => {
 
                         //log.info(pageHtml)
-                        saveData(connection, pageObj.url, pageHtml)
+                        hBaseService.saveData(pageObj.url, pageHtml)
 
                         val doc: Jerry = jerry(pageHtml)
                         val childPage: Page = if (pageObj.pages != null && pageObj.pages.nonEmpty) pageObj.pages.head else null

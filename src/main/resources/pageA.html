@@ -1,0 +1,270 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<!-- saved from url=(0037)https://tika.apache.org/download.html -->
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+    <title>Apache Tika – Download</title>
+    <style type="text/css" media="all">
+        @import url("./css/site.css");
+    </style>
+    <link rel="icon" type="image/png" href="https://tika.apache.org/tikaNoText16.png">
+    <script type="text/javascript">
+        function selectProvider(form) {
+            provider = form.elements['searchProvider'].value;
+            if (provider == "any") {
+                if (Math.random() > 0.5) {
+                    provider = "lucid";
+                } else {
+                    provider = "sl";
+                }
+            }
+            if (provider == "lucid") {
+                form.action = "http://find.searchhub.org/p:tika";
+            } else if (provider == "sl") {
+                form.action = "http://search-lucene.com/tika";
+            }
+            days = 90;
+            date = new Date();
+            date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+            expires = "; expires=" + date.toGMTString();
+            document.cookie = "searchProvider=" + provider + expires + "; path=/";
+        }
+        function initProvider() {
+            if (document.cookie.length>0) {
+                cStart=document.cookie.indexOf("searchProvider=");
+                if (cStart!=-1) {
+                    cStart=cStart + "searchProvider=".length;
+                    cEnd=document.cookie.indexOf(";", cStart);
+                    if (cEnd==-1) {
+                        cEnd=document.cookie.length;
+                    }
+                    provider = unescape(document.cookie.substring(cStart,cEnd));
+                    document.forms['searchform'].elements['searchProvider'].value = provider;
+                }
+            }
+            document.forms['searchform'].elements['q'].focus();
+        }
+    </script>
+</head>
+<body onload="initProvider();">
+<div id="body">
+    <div id="banner">
+        <a href="http://tika.apache.org/" id="bannerLeft" title="Apache Tika"><img src="./Apache Tika – Download_files/tika.png" alt="Apache Tika" width="292" height="100"></a>
+        <a href="http://www.apache.org/" id="bannerRight" title="The Apache Software Foundation"><img src="./Apache Tika – Download_files/asf-logo.gif" alt="The Apache Software Foundation" width="387" height="100"></a>
+    </div>
+    <div id="content">
+        <!-- Licensed to the Apache Software Foundation (ASF) under one or more --><!-- contributor license agreements.  See the NOTICE file distributed with --><!-- this work for additional information regarding copyright ownership. --><!-- The ASF licenses this file to You under the Apache License, Version 2.0 --><!-- (the "License"); you may not use this file except in compliance with --><!-- the License.  You may obtain a copy of the License at --><!--  --><!-- http://www.apache.org/licenses/LICENSE-2.0 --><!--  --><!-- Unless required by applicable law or agreed to in writing, software --><!-- distributed under the License is distributed on an "AS IS" BASIS, --><!-- WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied. --><!-- See the License for the specific language governing permissions and --><!-- limitations under the License. --><div class="section">
+        <h2><a name="Download_Apache_Tika"></a>Download Apache Tika</h2>
+        <p>Apache Tika 1.11 is now available. See the <a class="externalLink" href="http://www.apache.org/dist/tika/CHANGES-1.11.txt">CHANGES.txt</a> file for more information on the list of updates in this initial release.</p>
+        <ul>
+            <li><a class="externalLink" href="http://www.apache.org/dyn/closer.cgi/tika/tika-1.11-src.zip">Mirrors for apache-tika-1.11-src.zip</a> (source archive, <a class="externalLink" href="http://www.apache.org/dist/tika/tika-1.11-src.zip.asc">PGP signature</a>)<br>SHA1: <tt>d0dde7b3a4f1a2fb6ccd741552ea180dddab630a</tt><br>MD5: <tt>ccca11a7e5c300e438b2a52012cf4e39</tt></li>
+            <li><a class="externalLink" href="http://www.apache.org/dyn/closer.cgi/tika/tika-app-1.11.jar">Mirrors for tika-app-1.11.jar</a> (runnable jar, <a class="externalLink" href="http://www.apache.org/dist/tika/tika-app-1.11.jar.asc">PGP signature</a>)<br>SHA1: <tt>59cc7c4c48a6a41899ca282d925b2738d05a45a8</tt><br>MD5: <tt>3e133bcb3cd709fddd1bda3eebc1a0e5</tt>\</li>
+            <li><a class="externalLink" href="http://www.apache.org/dyn/closer.cgi/tika/tika-server-1.11.jar">Mirrors for tika-server-1.11.jar</a> (runnable jar, <a class="externalLink" href="http://www.apache.org/dist/tika/tika-server-1.11.jar.asc">PGP signature</a>)<br>SHA1: <tt>c1ca6453573fb7fa1f6b3d81dc4c9847a9a86a62</tt><br>MD5: <tt>7e28f3288c3bcd0c26ac6f557ddfb977</tt></li></ul>
+        <p>Apache Tika releases are available under the <a class="externalLink" href="http://www.apache.org/licenses/LICENSE-2.0">Apache License, Version 2.0</a>. See the NOTICE.txt file contained in each release artifact for applicable copyright attribution notices.</p>
+        <p>If you are looking for previous releases of Apache Tika, have a look in the <a class="externalLink" href="http://archive.apache.org/dist/tika/">archives</a>.</p>
+        <p>If you are looking for releases of Apache Tika from the Apache Lucene project (pre-0.8 releases), have a look in the <a class="externalLink" href="http://archive.apache.org/dist/lucene/tika/">lucene archives</a>. If you are looking for releases of Apache Tika from the Apache Incubator (pre-0.2 releases), have a look in the <a class="externalLink" href="http://archive.apache.org/dist/incubator/tika/">incubator archives</a>.</p></div>
+        <div class="section">
+            <h2><a name="Export_control"></a>Export control</h2>
+            <p>Apache Tika includes cryptographic software. The country in which you currently reside may have restrictions on the import, possession, use, and/or re-export to another country, of encryption software. BEFORE using any encryption software, please check your country's laws, regulations and policies concerning the import, possession, or use, and re-export of encryption software, to see if this is permitted. See &lt;<a class="externalLink" href="http://www.wassenaar.org/">http://www.wassenaar.org/</a>&gt; for more information.</p>
+            <p>The U.S. Government Department of Commerce, Bureau of Industry and Security (BIS), has classified this software as Export Commodity Control Number (ECCN) 5D002.C.1, which includes information security software using or performing cryptographic functions with asymmetric algorithms. The form and manner of this Apache Software Foundation distribution makes it eligible for export under the License Exception ENC Technology Software Unrestricted (TSU) exception (see the BIS Export Administration Regulations, Section 740.13) for both object code and source code.</p>
+            <p>The following provides more details on the included cryptographic software:</p>
+            <ul>
+                <li>Apache Tika uses the Bouncy Castle generic encryption libraries for extracting text content and metadata from encrypted PDF files. See <a class="externalLink" href="http://www.bouncycastle.org/">http://www.bouncycastle.org/</a> for more details on Bouncy Castle.</li></ul></div>
+        <div class="section">
+            <h2><a name="Verify"></a>Verify</h2>
+            <p>It is essential that you verify the integrity of the downloaded files using the PGP signatures. Please read <a class="externalLink" href="http://httpd.apache.org/dev/verification.html">Verifying Apache HTTP Server Releases</a> for more information on why you should verify our releases.</p>
+            <p>The PGP signatures can be verified using PGP or GPG. First download the <a class="externalLink" href="https://people.apache.org/keys/group/tika.asc">KEYS</a> file as well as the .asc signature files for the relevant release packages. Make sure you get these files from the main distribution directory, rather than from a mirror. Then verify the signatures using</p>
+            <div class="source">
+<pre>% pgpk -a KEYS
+% pgpv apache-tika-X.Y.Z.tar.gz.asc</pre></div>
+            <p>or</p>
+            <div class="source">
+<pre>% pgp -ka KEYS
+% pgp apache-tika-X.Y.Z.tar.gz.asc</pre></div>
+            <p>or</p>
+            <div class="source">
+<pre>% gpg --import KEYS
+% gpg --verify apache-tika-X.Y.Z.tar.gz.asc</pre></div></div>
+    </div>
+    <div id="sidebar">
+        <div id="navigation">
+            <h5>Apache Tika</h5>
+            <ul>
+
+                <li class="none">
+                    <a href="https://tika.apache.org/index.html">Introduction</a>
+                </li>
+
+                <li class="none">
+                    <strong>Download</strong>
+                </li>
+
+                <li class="none">
+                    <a href="https://tika.apache.org/contribute.html">Contribute</a>
+                </li>
+
+                <li class="none">
+                    <a href="https://tika.apache.org/mail-lists.html">Mailing Lists</a>
+                </li>
+
+                <li class="none">
+                    <a href="http://wiki.apache.org/tika/" class="externalLink">Tika Wiki</a>
+                </li>
+
+                <li class="none">
+                    <a href="https://issues.apache.org/jira/browse/TIKA" class="externalLink">Issue Tracker</a>
+                </li>
+            </ul>
+            <h5>Documentation</h5>
+            <ul>
+
+
+
+
+
+
+
+
+
+
+
+                <li class="expanded">
+                    <a href="https://tika.apache.org/1.11/index.html">Apache Tika 1.11</a>
+                    <ul>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/gettingstarted.html">Getting Started</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/formats.html">Supported Formats</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/parser.html">Parser API</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/parser_guide.html">Parser 5min Quick Start Guide</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/detection.html">Content and Language Detection</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/configuring.html">Configuring Tika</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/examples.html">Usage Examples</a>
+                        </li>
+
+                        <li class="none">
+                            <a href="https://tika.apache.org/1.11/api/">API Documentation</a>
+                        </li>
+                    </ul>
+                </li>
+
+
+
+
+
+
+
+
+
+
+
+                <li class="collapsed">
+                    <a href="https://tika.apache.org/1.10/index.html">Apache Tika 1.10</a>
+                </li>
+
+
+
+
+
+
+
+
+
+
+
+                <li class="collapsed">
+                    <a href="https://tika.apache.org/1.9/index.html">Apache Tika 1.9</a>
+                </li>
+
+
+
+
+
+
+
+
+
+
+                <li class="collapsed">
+                    <a href="https://tika.apache.org/1.8/index.html">Apache Tika 1.8</a>
+                </li>
+            </ul>
+            <h5>The Apache Software Foundation</h5>
+            <ul>
+
+                <li class="none">
+                    <a href="http://www.apache.org/foundation/" class="externalLink">About</a>
+                </li>
+
+                <li class="none">
+                    <a href="http://www.apache.org/licenses/" class="externalLink">License</a>
+                </li>
+
+                <li class="none">
+                    <a href="http://www.apache.org/security/" class="externalLink">Security</a>
+                </li>
+
+                <li class="none">
+                    <a href="http://www.apache.org/foundation/sponsorship.html" class="externalLink">Sponsorship</a>
+                </li>
+
+                <li class="none">
+                    <a href="http://www.apache.org/foundation/thanks.html" class="externalLink">Thanks</a>
+                </li>
+            </ul>
+
+            <div id="search">
+                <h5>Search with Apache Solr</h5>
+                <form action="http://search.lucidimagination.com/p:tika" method="get" id="searchform">
+                    <input type="text" id="query" name="q">
+                    <select name="searchProvider" id="searchProvider">
+                        <option value="any">provider</option>
+                        <option value="lucid">Lucid Find</option>
+                        <option value="sl">Search-Lucene</option>
+                    </select>
+                    <input type="submit" id="submit" value="Search" name="Search" onclick="selectProvider(this.form)">
+                </form>
+            </div>
+
+            <div id="bookpromo">
+                <h5>Books about Tika</h5>
+                <p>
+                    <a href="http://manning.com/mattmann/" title="Tika in Action"><img src="./Apache Tika – Download_files/mattmann_cover150.jpg" width="150" height="186"></a>
+                </p>
+            </div>
+        </div>
+    </div>
+    <div id="footer">
+        <p>
+            Copyright © 2015
+            <a href="http://www.apache.org/">The Apache Software Foundation</a>.
+            Site powered by <a href="http://maven.apache.org/">Apache Maven</a>.
+            Search powered by
+            <a href="http://www.lucidimagination.com/">Lucid Imagination</a>
+            and <a href="http://sematext.com/">Sematext</a>.
+            <br>
+            Apache Tika, Tika, Apache, the Apache feather logo, and the Apache
+            Tika project logo are trademarks of The Apache Software Foundation.
+        </p>
+    </div>
+</div>
+
+
+</body></html>

@@ -21,16 +21,16 @@ with DefaultTimeout with ImplicitSender with WordSpecLike with Matchers with Bef
 with MockFactory
 with UserModule {
 
-    override lazy val httpClient: HttpClient = stub[HttpClient]
+    override lazy val httpClient: HttpClient = mock[HttpClient]
 
     "Crawling apache tika web site" should {
 
         (httpClient.makeRequest _)
-            .when("https://tika.apache.org/download.html")
+            .expects("https://tika.apache.org/download.html")
             .returns(getPage("/pageA.html"))
 
         (httpClient.makeRequest _)
-            .when("http://archive.apache.org/dist/incubator/tika/")
+            .expects("http://archive.apache.org/dist/incubator/tika/")
             .returns(getPage("/pageB.html"))
 
         val page: Page = PageBuilder()
@@ -55,7 +55,7 @@ with UserModule {
 
                 manager ! 1
 
-                expectNoMsg() //expectMsg("test"
+                expectNoMsg()
             }
         }
     }

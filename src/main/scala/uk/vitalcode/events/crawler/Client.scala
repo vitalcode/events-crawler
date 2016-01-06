@@ -8,7 +8,7 @@ trait UserModule {
 
     import com.softwaremill.macwire._
 
-    lazy val httpClient: HttpClient = wire[DefaultHttpClient]
+    lazy val httpClient: HttpClient = wire[TestHttpClient]
     lazy val hBaseService: HBaseService = wire[TestHBaseService]
     lazy val requester: Requester = wire[Requester]
 }

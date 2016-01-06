@@ -1,66 +1,57 @@
 package uk.vitalcode.events.crawler
 
-import akka.actor.{Actor, ActorLogging, ActorSystem}
+import akka.actor.{Actor, ActorLogging}
 import akka.http.scaladsl.model.StatusCodes._
-import akka.http.scaladsl.model._
 import akka.stream.scaladsl.ImplicitMaterializer
-import akka.util.ByteString
 import jodd.jerry.Jerry
 import jodd.jerry.Jerry._
 import uk.vitalcode.events.crawler.model.Page
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class Requester(httpClient: HttpClient, hBaseService: HBaseService) extends Actor with ImplicitMaterializer with ActorLogging {
+case class FetchPage(page: Page)
 
-    implicit val system = ActorSystem()
+case class PagesToFetch(pages: Set[Page])
+
+class Requester(httpClient: HttpClient, hBaseService: HBaseService) extends Actor
+with ImplicitMaterializer with ActorLogging {
 
     def receive = {
-        case pageObj1: Page =>
-
-            val pageObj = pageObj1
-
-            log.info(s"requester page:${pageObj.id}")
-
-            require(pageObj.url != null)
-
+        case FetchPage(page) =>
             val send = sender
-
             val timeout = 3000.millis
+            log.info(s"Fetching page: ${page.id} ...")
 
-            //            val responseFuture: Future[HttpResponse] = Http().singleRequest(HttpRequest(uri = pageObj.url))
-
-            val responseFuture: Future[HttpResponse] = httpClient.makeRequest(pageObj.url)
-
-            responseFuture.map(response => response.status match {
+            require(page.url != null)
+            httpClient.makeRequest(page.url).map(response => response.status match {
                 case OK =>
-                    val bs: Future[ByteString] = response.entity.toStrict(timeout).map {
-                        _.data
-                    }
-                    val s: Future[String] = bs.map(_.utf8String)
-                    s.map(pageHtml => {
+                    response.entity.toStrict(timeout).map(entity => {
+                        // persist page
+                        val pageBody = entity.data.utf8String
+                        val dom: Jerry = jerry(pageBody)
+                        hBaseService.saveData(page.url, pageBody)
 
-                        //log.info(pageHtml)
-                        hBaseService.saveData(pageObj.url, pageHtml)
+                        // get child pages with urls
+                        var childPages = Set.empty[Page]
 
-                        val doc: Jerry = jerry(pageHtml)
-                        val childPage: Page = if (pageObj.pages != null && pageObj.pages.nonEmpty) pageObj.pages.head else null
-
-                        if (childPage != null) {
+                        page.pages.foreach(childPage => {
                             log.info(s"child css:${childPage.link}")
 
-                            val childUrl = doc.$(childPage.link).attr("href")
+                            val childUrl = dom.$(childPage.link).attr("href")
                             log.info(s"child url:$childUrl")
 
                             val newChildPage = Page(childPage.id, childUrl, childPage.link, childPage.props, childPage.pages, childPage.isRow)
-                            send ! newChildPage
-                        }
-                        else send ! false
+                            childPages += newChildPage
+                        })
+
+                        send ! PagesToFetch(childPages)
                     })
                 case _ =>
                     send ! false
             })
+        case msg: Any =>
+            log.warning(s"Message not delivered: $msg")
+            sender ! false
     }
 }

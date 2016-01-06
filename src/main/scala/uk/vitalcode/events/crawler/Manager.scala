@@ -9,12 +9,14 @@ class Manager(requester: ActorRef, page: Page) extends Actor with ImplicitMateri
     var completed: Boolean = false
 
     def receive = {
-        case page: Page =>
-            log.info(s"Manager got page:$page")
-            requester ! page
+        case PagesToFetch(pages) =>
+            pages.foreach(pageToFetch => {
+                log.info(s"Manager got page: ${pageToFetch.id}")
+                requester ! FetchPage(pageToFetch)
+            })
         case n: Int =>
             log.info(n.toString)
-            requester ! page
+            requester ! FetchPage(page)
         case strop: Boolean =>
             log.info("Manager completed job")
             completed = true

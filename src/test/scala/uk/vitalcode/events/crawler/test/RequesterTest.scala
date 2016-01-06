@@ -1,20 +1,13 @@
 package uk.vitalcode.events.crawler.test
 
-
 import akka.actor.ActorSystem
 import akka.testkit._
 import org.scalatest.{BeforeAndAfterAll, ShouldMatchers, WordSpecLike}
-import uk.vitalcode.events.crawler._
+import uk.vitalcode.events.crawler.Manager
 import uk.vitalcode.events.crawler.model.{Page, PageBuilder, PropBuilder, PropType}
 
-class AkkaTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender
-with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
-
-    def this() = this(ActorSystem("MySpec"))
-
-    override def afterAll {
-        TestKit.shutdownActorSystem(system)
-    }
+class RequesterTest extends TestKit(ActorSystem(RequesterTest.actorSystem))
+with ImplicitSender with WordSpecLike with BeforeAndAfterAll with ShouldMatchers {
 
     "When sending manager terminating message" must {
 
@@ -44,4 +37,12 @@ with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
             manager.underlyingActor.completed should equal(true)
         }
     }
+
+    override def afterAll {
+        TestKit.shutdownActorSystem(system)
+    }
+}
+
+object RequesterTest {
+    val actorSystem = "RequesterTest"
 }

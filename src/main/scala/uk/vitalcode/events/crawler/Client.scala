@@ -1,8 +1,14 @@
 package uk.vitalcode.events.crawler
 
 
-import akka.actor.{ActorSystem, Props}
+import akka.actor._
+import com.softwaremill.macwire._
 import uk.vitalcode.events.crawler.model._
+
+
+//trait AppModule {
+//
+//}
 
 trait UserModule {
 
@@ -11,11 +17,51 @@ trait UserModule {
     lazy val httpClient: HttpClient = wire[TestHttpClient]
     lazy val hBaseService: HBaseService = wire[TestHBaseService]
     lazy val requester: Requester = wire[Requester]
+
+    //def requesterFactory: Requester = wire[Requester]
+
+    def requesterFactory: Requester = wire[Requester]
+
+    //def produce(): Actor = requester
 }
+
+
+trait DIimp extends Extension {
+
+    import com.softwaremill.macwire._
+
+    lazy val httpClient: HttpClient = wire[TestHttpClient]
+    lazy val hBaseService: HBaseService = wire[TestHBaseService]
+    def requester: Requester = wire[Requester]
+
+    //This is the operation this Extension provides
+    //def ctx[T]: () => T = _
+}
+
+object DI extends ExtensionId[DIimp]
+with ExtensionIdProvider {
+
+
+    //The lookup method is required by ExtensionIdProvider,
+    // so we return ourselves here, this allows us
+    // to configure our extension to be loaded when
+    // the ActorSystem starts up
+    override def lookup = DI
+
+    //This method will be called by Akka
+    // to instantiate our Extension
+    override def createExtension(system: ExtendedActorSystem) = new DIimp{}
+
+    /**
+      * Java API: retrieve the Count extension for the given system.
+      */
+    override def get(system: ActorSystem): DIimp = super.get(system)
+}
+
 
 object Client extends UserModule {
 
-//    override lazy val httpClient: HttpClient = new TestHttpClient()
+    //    override lazy val httpClient: HttpClient = new TestHttpClient()
 
 
     def main(args: Array[String]) {
@@ -32,6 +78,13 @@ object Client extends UserModule {
 
         runScrawler()
     }
+
+    //    class DependencyInjector extends IndirectActorProducer {
+    //
+    //        override def produce(): Actor = requester
+    //
+    //        override def actorClass: Class[_ <: Actor] = classOf[Requester]
+    //    }
 
 
     def runScrawler(): Unit = {
@@ -53,9 +106,12 @@ object Client extends UserModule {
             )
             .build()
 
+        //DI with  (system) with  .ctx = () => requesterFactory //new Requester(new TestHttpClient(), new TestHBaseService())
+
         // val requester = system.actorOf(Props(new Requester(connection, new HttpClient(), new DefaultHBaseService())))
         val requesterRef = system.actorOf(Props(requester))
-        val manager = system.actorOf(Props(new Manager(requesterRef, page)))
+        val manager = system.actorOf(Props(classOf[Manager], requesterRef, page, () => requesterFactory))
+        //val manager = system.actorOf(Props(new Manager(requesterRef, page, requesterFactory)))
 
         manager ! 1
 

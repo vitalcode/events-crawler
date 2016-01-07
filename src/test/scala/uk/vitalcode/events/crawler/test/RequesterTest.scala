@@ -1,13 +1,13 @@
 package uk.vitalcode.events.crawler.test
 
-import akka.actor.ActorSystem
+import akka.actor.{Actor, IndirectActorProducer, ActorSystem}
 import akka.testkit._
 import org.scalatest.{BeforeAndAfterAll, ShouldMatchers, WordSpecLike}
-import uk.vitalcode.events.crawler.Manager
+import uk.vitalcode.events.crawler.{UserModule, Requester, Manager}
 import uk.vitalcode.events.crawler.model.{Page, PageBuilder, PropBuilder, PropType}
 
 class RequesterTest extends TestKit(ActorSystem(RequesterTest.actorSystem))
-with ImplicitSender with WordSpecLike with BeforeAndAfterAll with ShouldMatchers {
+with ImplicitSender with WordSpecLike with BeforeAndAfterAll with ShouldMatchers with UserModule{
 
     "When sending manager terminating message" must {
 
@@ -27,9 +27,17 @@ with ImplicitSender with WordSpecLike with BeforeAndAfterAll with ShouldMatchers
                 )
                 .build()
 
+            class DependencyInjector extends IndirectActorProducer {
+
+                override def produce(): Actor = requester
+
+                override def actorClass: Class[_ <: Actor] = classOf[Requester]
+            }
+
+            implicit val di = classOf[DependencyInjector]
 
             val echo = TestActorRef(TestActors.echoActorProps)
-            val manager = TestActorRef(new Manager(echo, page))
+            val manager = TestActorRef(new Manager(echo, page, () => requesterFactory))
 
             manager ! true
             expectNoMsg()

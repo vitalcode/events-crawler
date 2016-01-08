@@ -1,12 +1,13 @@
 package uk.vitalcode.events.crawler.test
 
-import akka.actor.{Actor, IndirectActorProducer, ActorSystem}
+import akka.actor._
 import akka.testkit._
 import org.scalatest.{BeforeAndAfterAll, ShouldMatchers, WordSpecLike}
 import uk.vitalcode.events.crawler._
 import uk.vitalcode.events.crawler.model.{Page, PageBuilder, PropBuilder, PropType}
 
-class ManagerTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender with UserModule
+// TODO add real tests
+class ManagerTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender
 with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
     def this() = this(ActorSystem("MySpec"))
@@ -17,38 +18,35 @@ with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
     "When sending manager terminating message" must {
 
-        "should terminate" in {
+        "mast terminate fetching" in {
 
-            val page: Page = PageBuilder()
-                .setId("pageA")
-                .setUrl("https://tika.apache.org/download.html")
-                .addProp(PropBuilder()
-                    .setName("Title")
-                    .setCss("p.title")
-                    .setKind(PropType.Text)
-                )
-                .addPage(PageBuilder()
-                    .setId("PageB")
-                    .setLink(".section p > a:nth-child(2)")
-                )
-                .build()
+            val requesterTestRef: TestActorRef[Nothing] = TestActorRef(TestActors.echoActorProps)
 
-            class DependencyInjector extends IndirectActorProducer {
+            val managerModule = new UserModule with ManagerModule with RequesterModule {
+                // TODO get system from the test class constructor
+                override lazy val system = ActorSystem("MySpec")
+                override lazy val page: Page = PageBuilder()
+                    .setId("pageA")
+                    .setUrl("https://tika.apache.org/download.html")
+                    .addProp(PropBuilder()
+                        .setName("Title")
+                        .setCss("p.title")
+                        .setKind(PropType.Text)
+                    )
+                    .addPage(PageBuilder()
+                        .setId("PageB")
+                        .setLink(".section p > a:nth-child(2)")
+                    )
+                    .build()
 
-                override def produce(): Actor = requester
-
-                override def actorClass: Class[_ <: Actor] = classOf[Requester]
+                override lazy val requesterRef: ActorRef = requesterTestRef
             }
 
-            implicit val di = classOf[DependencyInjector]
-
-            val echo = TestActorRef(TestActors.echoActorProps)
-            val manager = TestActorRef(new Manager(echo, page, () => requesterFactory))
-
-            manager ! true
+            val managerRef = TestActorRef(managerModule.manager)
+            managerRef ! true
             expectNoMsg()
 
-            manager.underlyingActor.completed should equal(true)
+            managerRef.underlyingActor.completed should equal(true)
         }
     }
 }

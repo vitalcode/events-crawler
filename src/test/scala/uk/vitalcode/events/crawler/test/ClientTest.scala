@@ -2,7 +2,7 @@ package uk.vitalcode.events.crawler.test
 
 import java.io.InputStream
 
-import akka.actor.{Actor, IndirectActorProducer, ActorSystem, Props}
+import akka.actor._
 import akka.http.scaladsl.model.{ContentTypes, HttpResponse}
 import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
 import com.typesafe.config.ConfigFactory
@@ -17,22 +17,23 @@ import scala.concurrent.duration._
 
 class ClientTest extends TestKit(ActorSystem("ClientTest", ConfigFactory.parseString(ClientTest.config)))
 with DefaultTimeout with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll
-with MockFactory
-with UserModule {
+with MockFactory {
+    val httpClientMock: HttpClient = mock[HttpClient]
 
-    override lazy val httpClient: HttpClient = mock[HttpClient]
+    "Client crawling apache tika web site" should {
 
-    "Crawling apache tika web site" should {
+        (httpClientMock.makeRequest _)
+            .expects("https://tika.apache.org/download.html")
+            .returns(getPage("/pageA.html"))
 
-            (httpClient.makeRequest _)
-                .expects("https://tika.apache.org/download.html")
-                .returns(getPage("/pageA.html"))
+        (httpClientMock.makeRequest _)
+            .expects("http://archive.apache.org/dist/incubator/tika/")
+            .returns(getPage("/pageB.html"))
 
-            (httpClient.makeRequest _)
-                .expects("http://archive.apache.org/dist/incubator/tika/")
-                .returns(getPage("/pageB.html"))
-
-            val page: Page = PageBuilder()
+        val managerModule = new UserModule with ManagerModule with RequesterModule {
+            // TODO get system from the test class constructor
+            override lazy val system = ActorSystem("ClientTest")
+            override lazy val page: Page = PageBuilder()
                 .setId("pageA")
                 .setUrl("https://tika.apache.org/download.html")
                 .addProp(PropBuilder()
@@ -46,16 +47,15 @@ with UserModule {
                 )
                 .build()
 
-        //DI(system).ctx = () => requesterFactory
+            override lazy val httpClient: HttpClient = httpClientMock
+        }
 
-        val requesterRef = system.actorOf(Props(classOf[Requester], httpClient, hBaseService))
-        val manager = system.actorOf(Props(classOf[Manager], requesterRef, page, () => requesterFactory))
+        val managerRef = managerModule.managerRef
 
-        "get two pages" in {
+        "must fetch data from two pages" in {
+
             within(500.millis) {
-
-                manager ! 1
-
+                managerRef ! 1
                 expectNoMsg()
             }
         }
@@ -74,15 +74,12 @@ with UserModule {
     }
 }
 
-
-object ClientTest extends UserModule {
+object ClientTest {
 
     val config =
         """
     akka {
       loglevel = "WARNING"
     }
-    akka.loggers = ["akka.testkit.TestEventListener"]
         """
-
 }

@@ -1,56 +1,52 @@
 package uk.vitalcode.events.crawler.test
 
-import akka.actor.{Actor, IndirectActorProducer, ActorSystem}
+import akka.actor._
 import akka.testkit._
 import org.scalatest.{BeforeAndAfterAll, ShouldMatchers, WordSpecLike}
-import uk.vitalcode.events.crawler.{UserModule, Requester, Manager}
+import uk.vitalcode.events.crawler._
 import uk.vitalcode.events.crawler.model.{Page, PageBuilder, PropBuilder, PropType}
 
-class RequesterTest extends TestKit(ActorSystem(RequesterTest.actorSystem))
-with ImplicitSender with WordSpecLike with BeforeAndAfterAll with ShouldMatchers with UserModule{
+// TODO add real requester tests
+class RequesterTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender
+with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
-    "When sending manager terminating message" must {
-
-        "should terminate" in {
-
-            val page: Page = PageBuilder()
-                .setId("pageA")
-                .setUrl("https://tika.apache.org/download.html")
-                .addProp(PropBuilder()
-                    .setName("Title")
-                    .setCss("p.title")
-                    .setKind(PropType.Text)
-                )
-                .addPage(PageBuilder()
-                    .setId("PageB")
-                    .setLink(".section p > a:nth-child(2)")
-                )
-                .build()
-
-            class DependencyInjector extends IndirectActorProducer {
-
-                override def produce(): Actor = requester
-
-                override def actorClass: Class[_ <: Actor] = classOf[Requester]
-            }
-
-            implicit val di = classOf[DependencyInjector]
-
-            val echo = TestActorRef(TestActors.echoActorProps)
-            val manager = TestActorRef(new Manager(echo, page, () => requesterFactory))
-
-            manager ! true
-            expectNoMsg()
-
-            manager.underlyingActor.completed should equal(true)
-        }
-    }
+    def this() = this(ActorSystem("MySpec"))
 
     override def afterAll {
         TestKit.shutdownActorSystem(system)
     }
-}
 
-object RequesterTest {
-    val actorSystem = "RequesterTest"
+    "When sending manager terminating message" must {
+
+        "must terminate fetching" in {
+
+            val requesterTestRef: TestActorRef[Nothing] = TestActorRef(TestActors.echoActorProps)
+
+            val managerModule = new UserModule with ManagerModule with RequesterModule {
+                // TODO get system from the test class constructor
+                override lazy val system = ActorSystem("MySpec")
+                override lazy val page: Page = PageBuilder()
+                    .setId("pageA")
+                    .setUrl("https://tika.apache.org/download.html")
+                    .addProp(PropBuilder()
+                        .setName("Title")
+                        .setCss("p.title")
+                        .setKind(PropType.Text)
+                    )
+                    .addPage(PageBuilder()
+                        .setId("PageB")
+                        .setLink(".section p > a:nth-child(2)")
+                    )
+                    .build()
+
+                override lazy val requesterRef: ActorRef = requesterTestRef
+            }
+
+            val managerRef = TestActorRef(managerModule.manager)
+            managerRef ! true
+            expectNoMsg()
+
+            managerRef.underlyingActor.completed should equal(true)
+        }
+    }
 }

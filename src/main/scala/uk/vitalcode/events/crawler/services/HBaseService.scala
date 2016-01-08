@@ -1,11 +1,11 @@
-package uk.vitalcode.events.crawler
+package uk.vitalcode.events.crawler.services
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.codec.digest.DigestUtils
 import org.apache.hadoop.conf.Configuration
-import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
-import org.apache.hadoop.hbase.client.{ConnectionFactory, Connection, Put, Table}
+import org.apache.hadoop.hbase.client.{Connection, ConnectionFactory, Put, Table}
 import org.apache.hadoop.hbase.util.Bytes
+import org.apache.hadoop.hbase.{HBaseConfiguration, TableName}
 
 trait HBaseService {
 

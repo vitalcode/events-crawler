@@ -9,7 +9,9 @@ import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, _}
 import uk.vitalcode.events.crawler._
+import uk.vitalcode.events.crawler.actormodel.{RequesterModule, ManagerModule}
 import uk.vitalcode.events.crawler.model._
+import uk.vitalcode.events.crawler.services.HttpClient
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

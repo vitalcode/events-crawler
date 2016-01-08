@@ -2,7 +2,9 @@ package uk.vitalcode.events.crawler
 
 import akka.actor._
 import com.softwaremill.macwire._
+import uk.vitalcode.events.crawler.actormodel.{RequesterModule, ManagerModule}
 import uk.vitalcode.events.crawler.model._
+import uk.vitalcode.events.crawler.services.{TestHBaseService, HBaseService, TestHttpClient, HttpClient}
 
 
 trait UserModule {

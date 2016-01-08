@@ -1,8 +1,9 @@
-package uk.vitalcode.events.crawler
+package uk.vitalcode.events.crawler.actormodel
 
 import akka.actor._
 import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
+import uk.vitalcode.events.crawler.UserModule
 import uk.vitalcode.events.crawler.model.Page
 
 trait ManagerModule {

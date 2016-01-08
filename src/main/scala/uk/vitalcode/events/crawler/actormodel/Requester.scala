@@ -1,4 +1,4 @@
-package uk.vitalcode.events.crawler
+package uk.vitalcode.events.crawler.actormodel
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.http.scaladsl.model.StatusCodes._
@@ -6,10 +6,12 @@ import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
 import jodd.jerry.Jerry
 import jodd.jerry.Jerry._
+import uk.vitalcode.events.crawler.UserModule
 import uk.vitalcode.events.crawler.model.Page
+import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 
-import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
+import scala.concurrent.ExecutionContext.Implicits.global
 
 case class FetchPage(page: Page)
 

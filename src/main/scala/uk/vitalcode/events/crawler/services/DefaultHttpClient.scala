@@ -1,10 +1,10 @@
-package uk.vitalcode.events.crawler
+package uk.vitalcode.events.crawler.services
 
 import java.io.InputStream
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.{ContentTypes, HttpRequest, HttpResponse, StatusCodes}
+import akka.http.scaladsl.model.{ContentTypes, HttpRequest, HttpResponse}
 import akka.stream.ActorMaterializer
 
 import scala.concurrent.Future

@@ -1,28 +1,22 @@
 package uk.vitalcode.events.crawler.model
 
-import uk.vitalcode.events.crawler.model.PropType.PropType
-
-object PropType extends Enumeration {
-    type PropType = Value
-    val Text, Date = Value
-}
-
 case class Page(var id: String, var ref: String,
                 var url: String, var link: String,
-                var props: collection.mutable.Map[String, Prop], var pages: collection.mutable.Set[Page],
+                var props: Map[String, Prop], var pages: Set[Page],
                 var parent: Page, var isRow: Boolean) {
 
     def this() = this(
         null, null,
         null, null,
-        collection.mutable.HashMap[String, Prop](),
-        collection.mutable.HashSet(),
+        collection.immutable.HashMap[String, Prop](),
+        collection.immutable.HashSet(),
         null, false
     )
 
-    override def toString(): String = id
+    override def toString: String = s"Page(id: $id, ref: $ref, url: $url, link: $link, " +
+        s"props: $props, pages: $pages, isRow: $isRow)"
 
-    override def hashCode(): Int = {
+    override def hashCode: Int = {
         var result: Int = 17
         result = 31 * result + (if (id != null) id.hashCode else 0)
         result = 31 * result + (if (ref != null) ref.hashCode else 0)
@@ -34,11 +28,23 @@ case class Page(var id: String, var ref: String,
         result
     }
 
-    // todo fix equalrs according to hashCode
-    //override def equals(obj: scala.Any): Boolean = super.equals(obj)
+    override def equals(obj: scala.Any): Boolean = {
+        val pageObj: Page = obj match {
+            case c: Page => c
+            case _ => {
+                return false
+            }
+        }
+        if (!(if (id == null) pageObj.id == null else id.equals(pageObj.id))) return false
+        if (!(if (ref == null) pageObj.ref == null else ref.equals(pageObj.ref))) return false
+        if (!(if (url == null) pageObj.url == null else url.equals(pageObj.url))) return false
+        if (!(if (link == null) pageObj.link == null else link.equals(pageObj.link))) return false
+        if (!(if (props == null) pageObj.props == null else props.equals(pageObj.props))) return false
+        if (!(if (pages == null) pageObj.pages == null else pages.equals(pageObj.pages))) return false
+        if (!isRow.equals(pageObj.isRow)) return false
+        true
+    }
 }
-
-case class Prop(name: String, css: String, kind: PropType)
 
 case class PageBuilder() extends Builder {
 
@@ -78,10 +84,9 @@ case class PageBuilder() extends Builder {
     }
 
     def addPage(childPage: Page): PageBuilder = {
-        page.pages += (childPage)
+        page.pages += childPage
         this
     }
-
 
     def isRow(isRow: Boolean): PageBuilder = {
         page.isRow = isRow
@@ -98,28 +103,4 @@ case class PageBuilder() extends Builder {
     override def build(): Page = page
 }
 
-case class PropBuilder() extends Builder {
-    private var name: String = _
-    private var css: String = _
-    private var kind: PropType = _
-
-    def setName(name: String): PropBuilder = {
-        this.name = name
-        this
-    }
-
-    def setCss(css: String): PropBuilder = {
-        this.css = css
-        this
-    }
-
-    def setKind(kind: PropType): PropBuilder = {
-        this.kind = kind
-        this
-    }
-
-    override type t = Prop
-
-    override def build(): Prop = new Prop(name, css, kind)
-}
 

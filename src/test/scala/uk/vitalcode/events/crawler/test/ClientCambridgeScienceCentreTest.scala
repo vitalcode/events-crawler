@@ -31,58 +31,63 @@ with MockFactory {
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/list")
             .returns(getPage("/clientCambridgeScienceCentreTest/list1.html"))
+            .once()
 
         // page 1 link 1
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/destination-space-crew-09012016-1500/")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.html"))
+            .once()
 
         // page 1 link 2
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/Voyagetospace_09012016_1600/")
             .returns(getPage("/clientCambridgeScienceCentreTest/voyagetospace_09012016_1600.html"))
+            .once()
 
         // page 2 list
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/list/?page=2")
             .returns(getPage("/clientCambridgeScienceCentreTest/list2.html"))
+            .once()
 
         // page 2 link 1
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/otherworlds/")
             .returns(getPage("/clientCambridgeScienceCentreTest/otherworlds.html"))
+            .once()
 
         // page 2 link 2
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/sunday-science-20-march/")
             .returns(getPage("/clientCambridgeScienceCentreTest/sunday-science-20-march.html"))
+            .once()
+
+        // page 3 list
+        (httpClientMock.makeRequest _)
+            .expects("http://www.cambridgesciencecentre.org/whats-on/list/?page=3")
+            .returns(getPage("/clientCambridgeScienceCentreTest/list3.html"))
+            .once()
+
+        // page 3 link 1
+        (httpClientMock.makeRequest _)
+            .expects("http://www.cambridgesciencecentre.org/whats-on/events/february-half-term-2016/")
+            .returns(getPage("/clientCambridgeScienceCentreTest/february-half-term-2016.html"))
+            .once()
+
+        // page 3 link 2
+        (httpClientMock.makeRequest _)
+            .expects("http://www.cambridgesciencecentre.org/whats-on/events/electric-universe/")
+            .returns(getPage("/clientCambridgeScienceCentreTest/electric-universe.html"))
+            .once()
+
+        (httpClientMock.makeRequest _).expects(*).never()
+
 
         val managerModule = new UserModule with ManagerModule with RequesterModule {
             override lazy val system = actorSystem
 
-
-            //            val pageBuilderList = PageBuilder()
-            //                .setId("list")
-            //                .setUrl("http://www.cambridgesciencecentre.org/whats-on/list")
-            //                .addPage(PageBuilder()
-            //                    .setId("description")
-            //                    .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
-            //                )
-            //
-            //            val page2 = PageBuilder()
-            //                .setId("pagination")
-            //                .setLink("div.pagination > div.omega > a")
-            //                .addPage(pageBuilderList.build().pages.head) // todo FIX THIS
-            //                .build()
-            //
-            //            pageBuilderList.addPage(page2)
-            //
-            //            override lazy val page: Page = pageBuilderList.build()
-
-
-            //override lazy val page: Page = pageA
-
-            val pageA = PageBuilder()
+            override lazy val page: Page = PageBuilder()
                 .setId("list")
                 .setUrl("http://www.cambridgesciencecentre.org/whats-on/list")
                 .addPage(PageBuilder()
@@ -96,14 +101,12 @@ with MockFactory {
                 )
                 .build()
 
-            override lazy val page: Page = pageA
-
             override lazy val httpClient: HttpClient = httpClientMock
         }
 
         val managerRef = managerModule.managerRef
 
-        "must fetch data from 6 web pages (2 page lists each with 2 links)" in {
+        "must fetch data from 9 web pages (3 page lists each with 2 links)" in {
 
             within(500.millis) {
                 managerRef ! 1
@@ -128,11 +131,13 @@ with MockFactory {
 object ClientCambridgeScienceCentreTest {
 
     val config = ConfigFactory.parseString(
-        """
-        akka {
-        loglevel = "WARNING"
-        }
-        """)
+    """
+    akka{
+        loggers = ["akka.event.slf4j.Slf4jLogger"]
+        loglevel = "DEBUG"
+        logging-filter = "akka.event.slf4j.Slf4jLoggingFilter"
+    }
+    """)
 
     val actorSystem: ActorSystem = ActorSystem("ClientCambridgeScienceCentreTest", config)
 }

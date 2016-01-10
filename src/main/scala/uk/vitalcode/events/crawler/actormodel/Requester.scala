@@ -47,7 +47,10 @@ trait RequesterModule {
                             var childPages = Set.empty[Page]
                             //var childPages = page.pages
 
-                            page.pages.foreach(childPage => {
+
+                            val pages = if (page.ref == null) page.pages else getParent(page, page.ref).pages
+
+                            pages.foreach(childPage => {
                                 log.info(s"child css:${childPage.link}")
                                 println(s"child css:${childPage.link}")
 
@@ -76,6 +79,10 @@ trait RequesterModule {
             case msg: Any =>
                 log.warning(s"Message not delivered: $msg")
                 sender ! false
+        }
+
+        def getParent(page: Page, ref: String): Page = {
+            if (page.id.equals(ref)) page else getParent(page.parent, ref)
         }
     }
 

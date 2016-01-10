@@ -7,73 +7,95 @@ object PropType extends Enumeration {
     val Text, Date = Value
 }
 
-case class Page(id: String, ref: String, url: String, link: String, props: Map[String, Prop], pages: Set[Page], parent: Page, isRow: Boolean = false)
+case class Page(var id: String, var ref: String,
+                var url: String, var link: String,
+                var props: collection.mutable.Map[String, Prop], var pages: collection.mutable.Set[Page],
+                var parent: Page, var isRow: Boolean) {
+
+    def this() = this(
+        null, null,
+        null, null,
+        collection.mutable.HashMap[String, Prop](),
+        collection.mutable.HashSet(),
+        null, false
+    )
+
+    override def toString(): String = id
+
+    override def hashCode(): Int = {
+        var result: Int = 17
+        result = 31 * result + (if (id != null) id.hashCode else 0)
+        result = 31 * result + (if (ref != null) ref.hashCode else 0)
+        result = 31 * result + (if (url != null) url.hashCode else 0)
+        result = 31 * result + (if (link != null) link.hashCode else 0)
+        result = 31 * result + (if (props != null) props.hashCode else 0)
+        result = 31 * result + (if (pages != null) pages.hashCode else 0)
+        result = 31 * result + (if (isRow) 1 else 0)
+        result
+    }
+
+    // todo fix equalrs according to hashCode
+    //override def equals(obj: scala.Any): Boolean = super.equals(obj)
+}
 
 case class Prop(name: String, css: String, kind: PropType)
 
 case class PageBuilder() extends Builder {
-    var id: String = _
-    var ref: String = _
-    var url: String = _
-    var link: String = _
-    var props: Map[String, Prop] = collection.immutable.HashMap[String, Prop]()
-    var pages: Set[Page] = collection.immutable.HashSet()
-    var parent: Page = _
-    var isRow: Boolean = false
+
+    private val page = new Page()
 
     def setId(id: String): PageBuilder = {
-        this.id = id
+        page.id = id
         this
     }
 
     def setRef(ref: String): PageBuilder = {
-        this.ref = ref
+        page.ref = ref
         this
     }
 
     def setUrl(url: String): PageBuilder = {
-        this.url = url
+        page.url = url
         this
     }
 
     def setLink(link: String): PageBuilder = {
-        this.link = link
+        page.link = link
         this
     }
 
     def addProp(propBuilder: PropBuilder): PageBuilder = {
         val prop = propBuilder.build()
-        this.props += (prop.name -> prop)
+        page.props += (prop.name -> prop)
         this
     }
 
     def addPage(pageBuilder: PageBuilder): PageBuilder = {
-        pageBuilder.setParent(parent)
-        val page: Page = pageBuilder.build()
-        addPage(page)
-    }
-
-    def addPage(page: Page): PageBuilder = {
-        this.pages += (page)
+        pageBuilder.setParent(page)
+        val childPage: Page = pageBuilder.build()
+        addPage(childPage)
         this
     }
 
-    def setParent(parent: Page): PageBuilder = {
-        this.parent = parent
+    def addPage(childPage: Page): PageBuilder = {
+        page.pages += (childPage)
         this
     }
+
 
     def isRow(isRow: Boolean): PageBuilder = {
-        this.isRow = isRow
+        page.isRow = isRow
+        this
+    }
+
+    private def setParent(parent: Page): PageBuilder = {
+        page.parent = parent
         this
     }
 
     override type t = Page
 
-    override def build(): Page = {
-        parent = new Page(id, ref, url, link, props, pages, parent, isRow)
-        parent
-    }
+    override def build(): Page = page
 }
 
 case class PropBuilder() extends Builder {

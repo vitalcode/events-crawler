@@ -61,40 +61,42 @@ with MockFactory {
             override lazy val system = actorSystem
 
 
-            val pageBuilderList = PageBuilder()
-                .setId("list")
-                .setUrl("http://www.cambridgesciencecentre.org/whats-on/list")
-                .addPage(PageBuilder()
-                    .setId("description")
-                    .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
-                )
-
-            val page2 = PageBuilder()
-                .setId("pagination")
-                .setLink("div.pagination > div.omega > a")
-                .addPage(pageBuilderList.build().pages.head) // todo FIX THIS
-                .build()
-
-            pageBuilderList.addPage(page2)
-
-            override lazy val page: Page = pageBuilderList.build()
-
-
-            //override lazy val page: Page = pageA
-
-            //            override lazy val page: Page = PageBuilder()
+            //            val pageBuilderList = PageBuilder()
             //                .setId("list")
             //                .setUrl("http://www.cambridgesciencecentre.org/whats-on/list")
             //                .addPage(PageBuilder()
             //                    .setId("description")
             //                    .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
             //                )
-            //                .addPage(PageBuilder()
-            //                    .setRef("list")
-            //                    .setLink("div.pagination > div.omega > a")
-            //                    .addPage()
-            //                )
+            //
+            //            val page2 = PageBuilder()
+            //                .setId("pagination")
+            //                .setLink("div.pagination > div.omega > a")
+            //                .addPage(pageBuilderList.build().pages.head) // todo FIX THIS
             //                .build()
+            //
+            //            pageBuilderList.addPage(page2)
+            //
+            //            override lazy val page: Page = pageBuilderList.build()
+
+
+            //override lazy val page: Page = pageA
+
+            val pageA = PageBuilder()
+                .setId("list")
+                .setUrl("http://www.cambridgesciencecentre.org/whats-on/list")
+                .addPage(PageBuilder()
+                    .setId("description")
+                    .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
+                )
+                .addPage(PageBuilder()
+                    .setRef("list")
+                    .setId("pagination")
+                    .setLink("div.pagination > div.omega > a")
+                )
+                .build()
+
+            override lazy val page: Page = pageA
 
             override lazy val httpClient: HttpClient = httpClientMock
         }

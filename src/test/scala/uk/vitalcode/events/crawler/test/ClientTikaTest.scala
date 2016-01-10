@@ -17,7 +17,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class ClientTest extends TestKit(ActorSystem("ClientTest", ConfigFactory.parseString(ClientTest.config)))
+class ClientTikaTest extends TestKit(ActorSystem("ClientTikaTest", ConfigFactory.parseString(ClientTikaTest.config)))
 with DefaultTimeout with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll
 with MockFactory {
     val httpClientMock: HttpClient = mock[HttpClient]
@@ -76,7 +76,7 @@ with MockFactory {
     }
 }
 
-object ClientTest {
+object ClientTikaTest {
 
     val config =
         """

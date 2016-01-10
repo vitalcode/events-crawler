@@ -4,14 +4,15 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
-import jodd.jerry.Jerry
+import jodd.jerry.{JerryNodeFunction, Jerry}
 import jodd.jerry.Jerry._
+import jodd.lagarto.dom.Node
 import uk.vitalcode.events.crawler.UserModule
 import uk.vitalcode.events.crawler.model.Page
 import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 
-import scala.concurrent.duration._
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration._
 
 case class FetchPage(page: Page)
 
@@ -28,8 +29,10 @@ trait RequesterModule {
         def receive = {
             case FetchPage(page) =>
                 val send = sender
-                val timeout = 3000.millis
+//                val timeout = 3000.millis
+                val timeout = 3000.hours
                 log.info(s"Fetching page: ${page.id} ...")
+                println(s"Fetching page: ${page.id} ...")
 
                 require(page.url != null)
                 httpClient.makeRequest(page.url).map(response => response.status match {
@@ -42,17 +45,29 @@ trait RequesterModule {
 
                             // get child pages with urls
                             var childPages = Set.empty[Page]
+                            //var childPages = page.pages
 
                             page.pages.foreach(childPage => {
                                 log.info(s"child css:${childPage.link}")
+                                println(s"child css:${childPage.link}")
 
-                                val childUrl = dom.$(childPage.link).attr("href")
-                                log.info(s"child url:$childUrl")
+                                // TODO need to iterate through each css link
+                                val childLink = dom.$(childPage.link)
 
-                                val newChildPage = Page(childPage.id, childUrl, childPage.link, childPage.props, childPage.pages, childPage.isRow)
-                                childPages += newChildPage
+                                childLink.each(new JerryNodeFunction {
+                                    override def onNode(node: Node, index: Int): Boolean = {
+                                        val childUrl = node.getAttribute("href")
+                                        log.info(s"child url:$childUrl")
+                                        println(s"child url:$childUrl")
+
+                                        val newChildPage = Page(childPage.id, childPage.ref, childUrl, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
+                                        childPages += newChildPage
+                                        true
+                                    }
+                                })
                             })
 
+                            println(childPages)
                             send ! PagesToFetch(childPages)
                         })
                     case _ =>

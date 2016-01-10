@@ -24,6 +24,7 @@ trait ManagerModule {
             case PagesToFetch(pages) =>
                 pages.foreach(pageToFetch => {
                     log.info(s"Manager request fetching: ${pageToFetch.id}")
+                    println(s"Manager request fetching: ${pageToFetch}")
                     val requesterRef = requesterFactory()
                     requesterRef ! FetchPage(pageToFetch)
                 })

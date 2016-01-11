@@ -23,7 +23,7 @@ with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
 
             val requesterTestRef: TestActorRef[Nothing] = TestActorRef(TestActors.echoActorProps)
 
-            val managerModule = new UserModule with ManagerModule with RequesterModule {
+            val managerModule = new AppModule with ManagerModule with RequesterModule {
                 // TODO get system from the test class constructor
                 override lazy val system = ActorSystem("MySpec")
                 override lazy val page: Page = PageBuilder()

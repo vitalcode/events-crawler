@@ -4,10 +4,10 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
-import jodd.jerry.{JerryNodeFunction, Jerry}
 import jodd.jerry.Jerry._
+import jodd.jerry.{Jerry, JerryNodeFunction}
 import jodd.lagarto.dom.Node
-import uk.vitalcode.events.crawler.UserModule
+import uk.vitalcode.events.crawler.AppModule
 import uk.vitalcode.events.crawler.model.Page
 import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 
@@ -19,7 +19,7 @@ case class FetchPage(page: Page)
 case class PagesToFetch(pages: Set[Page])
 
 trait RequesterModule {
-    this: UserModule =>
+    this: AppModule =>
 
     lazy val requesterRef: ActorRef = system.actorOf(Props(wire[Requester]))
 
@@ -28,33 +28,36 @@ trait RequesterModule {
 
         def receive = {
             case FetchPage(page) =>
-                val send = sender
-//                val timeout = 3000.millis
-                val timeout = 3000.hours
-                log.info(s"Fetching page: ${page.id} ...")
-                println(s"Fetching page: ${page.id} ...")
+                log.info(s"Fetching page [${page.id}] ...")
 
+                val send = sender
+                val timeout = 3000.millis
                 require(page.url != null)
+                log.info(logMessage(s"Fetching data from url [${page.url}]", page))
+
                 httpClient.makeRequest(page.url).map(response => response.status match {
                     case OK =>
                         response.entity.toStrict(timeout).map(entity => {
                             // persist page
                             val pageBody = entity.data.utf8String
                             val dom: Jerry = jerry(pageBody)
+                            log.info(logMessage(s"Saving fetched data to the database", page))
                             hBaseService.saveData(page.url, pageBody)
 
-                            // get child pages with urls
+                            // get child pages or child of the parent if ref is specified
                             var childPages = Set.empty[Page]
-                            //var childPages = page.pages
-
-
-                            val pages = if (page.ref == null) page.pages else getParent(page, page.ref).pages
+                            val pages = if (page.ref == null) {
+                                log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
+                                page.pages
+                            } else {
+                                val parentPage = getParent(page, page.ref)
+                                log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent ${parentPage}", page))
+                                parentPage.pages
+                            }
 
                             pages.foreach(childPage => {
-                                log.info(s"child css:${childPage.link}")
-                                println(s"child css:${childPage.link}")
+                                log.info(logMessage(s"Found child css link [${childPage.link}]", page))
 
-                                // TODO need to iterate through each css link
                                 val childLink = dom.$(childPage.link)
 
                                 childLink.each(new JerryNodeFunction {
@@ -62,19 +65,17 @@ trait RequesterModule {
                                         val childLink = node.getAttribute("href")
                                         val childImage = node.getAttribute("src")
                                         val childUrl = if (childLink != null) childLink else childImage
-
-                                        log.info(s"child url:$childUrl")
-                                        println(s"child url:$childUrl")
-
                                         val newChildPage = Page(childPage.id, childPage.ref, childUrl, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
+                                        log.info(logMessage(s"Adding child page [$newChildPage]", page))
                                         childPages += newChildPage
                                         true
                                     }
                                 })
                             })
-
-                            println(childPages)
-                            send ! PagesToFetch(childPages)
+                            if (childPages.nonEmpty) {
+                                log.info(logMessage(s"Sending fetching request for ${childPages.size} child pages", page))
+                                send ! PagesToFetch(childPages)
+                            }
                         })
                     case _ =>
                         send ! false
@@ -86,6 +87,10 @@ trait RequesterModule {
 
         def getParent(page: Page, ref: String): Page = {
             if (page.id.equals(ref)) page else getParent(page.parent, ref)
+        }
+
+        def logMessage(message: String, page: Page): String = {
+            s"[${page.id}] $message ([$page])"
         }
     }
 

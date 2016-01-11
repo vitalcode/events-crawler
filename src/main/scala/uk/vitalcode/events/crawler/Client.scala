@@ -7,7 +7,7 @@ import uk.vitalcode.events.crawler.model._
 import uk.vitalcode.events.crawler.services.{TestHBaseService, HBaseService, TestHttpClient, HttpClient}
 
 
-trait UserModule {
+trait AppModule {
 
     def page: Page
     def system: ActorSystem
@@ -24,7 +24,7 @@ object Client {
 
     def runScrawler(): Unit = {
 
-        val managerModule = new UserModule with ManagerModule with RequesterModule {
+        val managerModule = new AppModule with ManagerModule with RequesterModule {
             override lazy val system = ActorSystem("ScrawlerSystem")
             override lazy val page: Page = PageBuilder()
                 .setId("pageA")

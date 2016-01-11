@@ -45,9 +45,9 @@ class TestHBaseService extends HBaseService with LazyLogging {
 
 
     override def saveData(url: String, page: String) = {
-        val maxLogLenght = 100
+        val maxLogLenght = 200
 
         logger.info(s"Url: $url")
-        logger.info(s"Page: ${page.substring(0, Math.min(page.length(), maxLogLenght));}")
+        logger.info(s"Page: ${page.replace('\n', ' ').substring(0, Math.min(page.length(), maxLogLenght));}")
     }
 }

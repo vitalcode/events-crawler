@@ -3,11 +3,11 @@ package uk.vitalcode.events.crawler.actormodel
 import akka.actor._
 import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
-import uk.vitalcode.events.crawler.UserModule
+import uk.vitalcode.events.crawler.AppModule
 import uk.vitalcode.events.crawler.model.Page
 
 trait ManagerModule {
-    this: UserModule with RequesterModule =>
+    this: AppModule with RequesterModule =>
 
     lazy val managerRef: ActorRef = system.actorOf(Props(wire[Manager]))
     lazy val manager: Manager = wire[Manager]
@@ -23,8 +23,7 @@ trait ManagerModule {
         def receive = {
             case PagesToFetch(pages) =>
                 pages.foreach(pageToFetch => {
-                    log.info(s"Manager request fetching: ${pageToFetch.id}")
-                    println(s"Manager request fetching: ${pageToFetch}")
+                    log.info(s"Manager ask requester to fetch page [$pageToFetch]")
                     val requesterRef = requesterFactory()
                     requesterRef ! FetchPage(pageToFetch)
                 })

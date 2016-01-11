@@ -4,7 +4,7 @@ import java.io.InputStream
 
 import akka.actor._
 import akka.http.scaladsl.model.{ContentTypes, HttpResponse}
-import akka.testkit.{DefaultTimeout, ImplicitSender, TestKit}
+import akka.testkit._
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, _}
@@ -18,14 +18,14 @@ import scala.concurrent.Future
 import scala.concurrent.duration._
 
 class ClientCambridgeScienceCentreTest(actorSystem: ActorSystem) extends TestKit(actorSystem)
-with DefaultTimeout with ImplicitSender with WordSpecLike with Matchers with BeforeAndAfterAll
-with MockFactory {
+with DefaultTimeout with ImplicitSender with WordSpecLike
+with Matchers with BeforeAndAfterAll with MockFactory {
 
     def this() = this(ClientCambridgeScienceCentreTest.actorSystem)
 
-    val httpClientMock: HttpClient = mock[HttpClient]
-
     "Client crawling Cambridge science centre web site" should {
+
+        val httpClientMock: HttpClient = mock[HttpClient]
 
         // page 1 list
         (httpClientMock.makeRequest _)
@@ -117,8 +117,6 @@ with MockFactory {
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
-        (httpClientMock.makeRequest _).expects(*).never()
-
         val managerModule = new AppModule with ManagerModule with RequesterModule {
             override lazy val system = actorSystem
 
@@ -145,8 +143,7 @@ with MockFactory {
 
         val managerRef = managerModule.managerRef
 
-        "must fetch data from 9 web pages (3 page lists each with 2 links)" in {
-
+        "should fetch data from 9 web pages (3 page lists each with 2 links)" in {
             within(500.millis) {
                 managerRef ! 1
                 expectNoMsg()
@@ -170,13 +167,13 @@ with MockFactory {
 object ClientCambridgeScienceCentreTest {
 
     val config = ConfigFactory.parseString(
-    """
+        """
     akka{
         loggers = ["akka.event.slf4j.Slf4jLogger"]
         loglevel = "DEBUG"
         logging-filter = "akka.event.slf4j.Slf4jLoggingFilter"
     }
-    """)
+        """)
 
     val actorSystem: ActorSystem = ActorSystem("ClientCambridgeScienceCentreTest", config)
 }

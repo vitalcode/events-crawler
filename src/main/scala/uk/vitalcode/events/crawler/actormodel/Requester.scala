@@ -59,7 +59,10 @@ trait RequesterModule {
 
                                 childLink.each(new JerryNodeFunction {
                                     override def onNode(node: Node, index: Int): Boolean = {
-                                        val childUrl = node.getAttribute("href")
+                                        val childLink = node.getAttribute("href")
+                                        val childImage = node.getAttribute("src")
+                                        val childUrl = if (childLink != null) childLink else childImage
+
                                         log.info(s"child url:$childUrl")
                                         println(s"child url:$childUrl")
 

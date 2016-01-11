@@ -39,10 +39,22 @@ with MockFactory {
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.html"))
             .once()
 
+        // page 1 link 1 image
+        (httpClientMock.makeRequest _)
+            .expects("/media/assets/3a/969c39e09b655c715be0aa6b578908427d75e7.jpg")
+            .returns(getPage("/destination-space-crew-09012016-1500.jpg"))
+            .once()
+
         // page 1 link 2
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/Voyagetospace_09012016_1600/")
             .returns(getPage("/clientCambridgeScienceCentreTest/voyagetospace_09012016_1600.html"))
+            .once()
+
+        // page 1 link 2 image
+        (httpClientMock.makeRequest _)
+            .expects("/media/assets/3a/0004a8c035b90924f8321df21276fc8f83a6cd.jpg")
+            .returns(getPage("/destination-space-crew-09012016-1500.jpg"))
             .once()
 
         // page 2 list
@@ -57,10 +69,22 @@ with MockFactory {
             .returns(getPage("/clientCambridgeScienceCentreTest/otherworlds.html"))
             .once()
 
+        // page 2 link 1 image
+        (httpClientMock.makeRequest _)
+            .expects("/media/assets/3a/37cf8f84e5cfa94cdcac3f73bc13cfea3556a7.jpg")
+            .returns(getPage("/destination-space-crew-09012016-1500.jpg"))
+            .once()
+
         // page 2 link 2
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/sunday-science-20-march/")
             .returns(getPage("/clientCambridgeScienceCentreTest/sunday-science-20-march.html"))
+            .once()
+
+        // page 2 link 2 image
+        (httpClientMock.makeRequest _)
+            .expects("/media/assets/3a/200e303cecd9eee71f77c97ddea630521cbfe9.png")
+            .returns(getPage("/destination-space-crew-09012016-1500.jpg"))
             .once()
 
         // page 3 list
@@ -75,14 +99,25 @@ with MockFactory {
             .returns(getPage("/clientCambridgeScienceCentreTest/february-half-term-2016.html"))
             .once()
 
+        // page 3 link 1 image
+        (httpClientMock.makeRequest _)
+            .expects("/media/assets/3a/d78141bc0cc3f96d175843c2cd0e97beb9c370.jpg")
+            .returns(getPage("/destination-space-crew-09012016-1500.jpg"))
+            .once()
+
         // page 3 link 2
         (httpClientMock.makeRequest _)
             .expects("http://www.cambridgesciencecentre.org/whats-on/events/electric-universe/")
             .returns(getPage("/clientCambridgeScienceCentreTest/electric-universe.html"))
             .once()
 
-        (httpClientMock.makeRequest _).expects(*).never()
+        // page 3 link 2 image
+        (httpClientMock.makeRequest _)
+            .expects("/media/assets/3a/fb2024b1db936348b42d3edd48995c32f69a1d.jpg")
+            .returns(getPage("/destination-space-crew-09012016-1500.jpg"))
+            .once()
 
+        (httpClientMock.makeRequest _).expects(*).never()
 
         val managerModule = new UserModule with ManagerModule with RequesterModule {
             override lazy val system = actorSystem
@@ -93,6 +128,10 @@ with MockFactory {
                 .addPage(PageBuilder()
                     .setId("description")
                     .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
+                    .addPage(PageBuilder()
+                        .setId("image")
+                        .setLink("section.event_detail > div.page_content > article > img")
+                    )
                 )
                 .addPage(PageBuilder()
                     .setRef("list")

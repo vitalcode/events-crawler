@@ -19,7 +19,7 @@ libraryDependencies ++= {
     val scalaLoggingV = "3.1.0"
     val akkaV = "2.3.12"
     val akkaHttpV = "1.0"
-    val scalamock = "3.2"
+    val scalamockV = "3.2"
     val macwireV = "2.2.2"
 
     Seq(
@@ -48,6 +48,6 @@ libraryDependencies ++= {
         "com.softwaremill.macwire" %% "proxy" % macwireV,
 
         "org.scalatest" %% "scalatest" % scalaTestV % "test",
-        "org.scalamock" %% "scalamock-scalatest-support" % scalamock % "test"
+        "org.scalamock" %% "scalamock-scalatest-support" % scalamockV % "test"
     )
 }

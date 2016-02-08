@@ -5,13 +5,14 @@ import java.io.InputStream
 import akka.actor._
 import akka.http.scaladsl.model.{ContentTypes, HttpResponse}
 import akka.testkit._
+import com.softwaremill.macwire._
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, _}
 import uk.vitalcode.events.crawler._
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.model._
-import uk.vitalcode.events.crawler.services.HttpClient
+import uk.vitalcode.events.crawler.services.{TestHBaseService, HBaseService, TestHttpClient, HttpClient}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
@@ -41,7 +42,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 1 link 1 image
         (httpClientMock.makeRequest _)
-            .expects("/media/assets/3a/969c39e09b655c715be0aa6b578908427d75e7.jpg")
+            .expects("http://www.cambridgesciencecentre.org/media/assets/3a/969c39e09b655c715be0aa6b578908427d75e7.jpg")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
@@ -53,7 +54,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 1 link 2 image
         (httpClientMock.makeRequest _)
-            .expects("/media/assets/3a/0004a8c035b90924f8321df21276fc8f83a6cd.jpg")
+            .expects("http://www.cambridgesciencecentre.org/media/assets/3a/0004a8c035b90924f8321df21276fc8f83a6cd.jpg")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
@@ -71,7 +72,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 2 link 1 image
         (httpClientMock.makeRequest _)
-            .expects("/media/assets/3a/37cf8f84e5cfa94cdcac3f73bc13cfea3556a7.jpg")
+            .expects("http://www.cambridgesciencecentre.org/media/assets/3a/37cf8f84e5cfa94cdcac3f73bc13cfea3556a7.jpg")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
@@ -83,7 +84,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 2 link 2 image
         (httpClientMock.makeRequest _)
-            .expects("/media/assets/3a/200e303cecd9eee71f77c97ddea630521cbfe9.png")
+            .expects("http://www.cambridgesciencecentre.org/media/assets/3a/200e303cecd9eee71f77c97ddea630521cbfe9.png")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
@@ -101,7 +102,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 3 link 1 image
         (httpClientMock.makeRequest _)
-            .expects("/media/assets/3a/d78141bc0cc3f96d175843c2cd0e97beb9c370.jpg")
+            .expects("http://www.cambridgesciencecentre.org/media/assets/3a/d78141bc0cc3f96d175843c2cd0e97beb9c370.jpg")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
@@ -113,7 +114,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 3 link 2 image
         (httpClientMock.makeRequest _)
-            .expects("/media/assets/3a/fb2024b1db936348b42d3edd48995c32f69a1d.jpg")
+            .expects("http://www.cambridgesciencecentre.org/media/assets/3a/fb2024b1db936348b42d3edd48995c32f69a1d.jpg")
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
@@ -139,6 +140,8 @@ with Matchers with BeforeAndAfterAll with MockFactory {
                 .build()
 
             override lazy val httpClient: HttpClient = httpClientMock
+
+            override lazy val hBaseService: HBaseService = wire[TestHBaseService]
         }
 
         val managerRef = managerModule.managerRef

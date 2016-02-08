@@ -1,5 +1,7 @@
 package uk.vitalcode.events.crawler.actormodel
 
+import java.net.URI
+
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.http.scaladsl.model.StatusCodes._
 import akka.stream.scaladsl.ImplicitMaterializer
@@ -62,10 +64,12 @@ trait RequesterModule {
 
                                 childLink.each(new JerryNodeFunction {
                                     override def onNode(node: Node, index: Int): Boolean = {
-                                        val childLink = node.getAttribute("href")
-                                        val childImage = node.getAttribute("src")
-                                        val childUrl = if (childLink != null) childLink else childImage
-                                        val newChildPage = Page(childPage.id, childPage.ref, childUrl, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
+                                        val baseUri = new URI(page.url)
+                                        val childLinkUrl = node.getAttribute("href")
+                                        val childImageUrl = node.getAttribute("src")
+                                        val childUri = if (childLinkUrl != null) new URI(childLinkUrl) else new URI(childImageUrl)
+                                        val resolvedUri = baseUri.resolve(childUri).toString
+                                        val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
                                         log.info(logMessage(s"Adding child page [$newChildPage]", page))
                                         childPages += newChildPage
                                         true
@@ -93,5 +97,4 @@ trait RequesterModule {
             s"[${page.id}] $message ([$page])"
         }
     }
-
 }

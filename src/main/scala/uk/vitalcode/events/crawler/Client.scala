@@ -11,7 +11,6 @@ trait AppModule {
 
     def page: Page
     def system: ActorSystem
-
     lazy val httpClient: HttpClient = wire[TestHttpClient]
     lazy val hBaseService: HBaseService = wire[TestHBaseService]
 }

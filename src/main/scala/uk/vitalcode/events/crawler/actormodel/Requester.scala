@@ -9,7 +9,7 @@ import com.softwaremill.macwire._
 import jodd.jerry.Jerry._
 import jodd.jerry.{Jerry, JerryNodeFunction}
 import jodd.lagarto.dom.Node
-import uk.vitalcode.events.crawler.AppModule
+import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.model.Page
 import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 
@@ -97,4 +97,5 @@ trait RequesterModule {
             s"[${page.id}] $message ([$page])"
         }
     }
+
 }

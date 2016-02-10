@@ -3,7 +3,7 @@ package uk.vitalcode.events.crawler.actormodel
 import akka.actor._
 import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
-import uk.vitalcode.events.crawler.AppModule
+import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.model.Page
 
 trait ManagerModule {
@@ -14,9 +14,7 @@ trait ManagerModule {
 
     def requesterFactory = () => requesterRef
 
-    class Manager(requester: ActorRef, page: Page) extends Actor with ActorLogging
-    with ImplicitMaterializer {
-
+    class Manager(requester: ActorRef, page: Page) extends Actor with ActorLogging with ImplicitMaterializer {
 
         var completed: Boolean = false
 
@@ -35,9 +33,5 @@ trait ManagerModule {
                 completed = true
         }
     }
+
 }
-
-
-
-
-

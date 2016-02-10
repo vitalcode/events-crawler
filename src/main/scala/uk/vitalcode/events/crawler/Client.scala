@@ -1,49 +1,49 @@
 package uk.vitalcode.events.crawler
 
 import akka.actor._
-import com.softwaremill.macwire._
-import uk.vitalcode.events.crawler.actormodel.{RequesterModule, ManagerModule}
+import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
+import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.model._
-import uk.vitalcode.events.crawler.services.{TestHBaseService, HBaseService, TestHttpClient, HttpClient}
-
-
-trait AppModule {
-
-    def page: Page
-    def system: ActorSystem
-    lazy val httpClient: HttpClient = wire[TestHttpClient]
-    lazy val hBaseService: HBaseService = wire[TestHBaseService]
-}
 
 object Client {
 
     def main(args: Array[String]) {
-        runScrawler()
+        if (args.length > 0) {
+            args(0) match {
+                case "scrawl" =>
+                    runScrawler()
+                case _ => info()
+            }
+        } else {
+            info()
+        }
     }
 
-    def runScrawler(): Unit = {
+    private def info(): Unit = {
+        println("arguments: [scrawl]")
+    }
 
+    private def runScrawler(): Unit = {
         val managerModule = new AppModule with ManagerModule with RequesterModule {
             override lazy val system = ActorSystem("ScrawlerSystem")
             override lazy val page: Page = PageBuilder()
-                .setId("pageA")
-                .setUrl("https://tika.apache.org/download.html")
-                .addProp(PropBuilder()
-                    .setName("Title")
-                    .setCss("p.title")
-                    .setKind(PropType.Text)
+                .setId("list")
+                .setUrl("http://www.cambridgesciencecentre.org/whats-on/list/")
+                .addPage(PageBuilder()
+                    .setId("description")
+                    .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
+                    .addPage(PageBuilder()
+                        .setId("image")
+                        .setLink("section.event_detail > div.page_content > article > img")
+                    )
                 )
                 .addPage(PageBuilder()
-                    .setId("PageB")
-                    .setLink(".section p > a:nth-child(2)")
+                    .setRef("list")
+                    .setId("pagination")
+                    .setLink("div.pagination > div.omega > a")
                 )
                 .build()
         }
-
         managerModule.managerRef ! 1
-
-        // TODO close on finish
-        // connection.close()
     }
-
 }

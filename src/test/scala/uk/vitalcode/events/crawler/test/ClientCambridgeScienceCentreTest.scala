@@ -9,10 +9,10 @@ import com.softwaremill.macwire._
 import com.typesafe.config.ConfigFactory
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, _}
-import uk.vitalcode.events.crawler._
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
+import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.model._
-import uk.vitalcode.events.crawler.services.{TestHBaseService, HBaseService, TestHttpClient, HttpClient}
+import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient, TestHBaseService}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future

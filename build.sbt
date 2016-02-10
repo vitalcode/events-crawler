@@ -21,12 +21,20 @@ libraryDependencies ++= {
     val akkaHttpV = "1.0"
     val scalamockV = "3.2"
     val macwireV = "2.2.2"
+    val configV = "1.3.0"
 
     Seq(
         "org.apache.hbase" % "hbase" % hbaseV,
         "org.apache.hbase" % "hbase-client" % hbaseV,
         "org.apache.hbase" % "hbase-server" % hbaseV excludeAll ExclusionRule(organization = "org.mortbay.jetty"),
         "org.apache.hbase" % "hbase-common" % hbaseV,
+
+        // TODO not required for running in cluster
+        "org.apache.zookeeper" % "zookeeper" % zooV,
+        "org.apache.hbase" % "hbase-protocol" % hbaseV,
+        "org.apache.hbase" % "hbase-hadoop-compat" % hbaseV,
+        "org.apache.htrace" % "htrace-core" % "3.1.0-incubating",
+        "com.google.guava" % "guava" % "12.0.1",
 
         "org.apache.hadoop" % "hadoop-common" % hadoopV excludeAll ExclusionRule(organization = "javax.servlet"),
         "org.apache.hadoop" % "hadoop-client" % hadoopV excludeAll ExclusionRule(organization = "javax.servlet") exclude("com.google.guava", "guava"),
@@ -42,6 +50,7 @@ libraryDependencies ++= {
         "org.jodd" % "jodd-log" % joddV,
 
         "com.typesafe.scala-logging" %% "scala-logging" % scalaLoggingV,
+        "com.typesafe" % "config" % configV,
 
         "com.softwaremill.macwire" %% "macros" % macwireV % "provided",
         "com.softwaremill.macwire" %% "util" % macwireV,
@@ -51,3 +60,15 @@ libraryDependencies ++= {
         "org.scalamock" %% "scalamock-scalatest-support" % scalamockV % "test"
     )
 }
+
+assemblyMergeStrategy in assembly := {
+    case PathList("reference.conf") => MergeStrategy.concat
+    case m if m.toLowerCase.endsWith("manifest.mf") => MergeStrategy.discard
+    case m if m.toLowerCase.matches("meta-inf.*\\.sf$") => MergeStrategy.discard
+    case "META-INF/jersey-module-version" => MergeStrategy.first
+    case _ => MergeStrategy.first
+}
+
+parallelExecution in Test := false
+assemblyJarName in assembly := "crawler.jar"
+mainClass in assembly := Some("uk.vitalcode.events.crawler.Client")

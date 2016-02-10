@@ -3,8 +3,8 @@ package uk.vitalcode.events.crawler.test.actormodel
 import akka.actor._
 import akka.testkit._
 import org.scalatest.{BeforeAndAfterAll, ShouldMatchers, WordSpecLike}
-import uk.vitalcode.events.crawler._
-import uk.vitalcode.events.crawler.actormodel.{RequesterModule, ManagerModule}
+import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
+import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.model.{Page, PageBuilder, PropBuilder, PropType}
 
 // TODO add real tests

@@ -1,7 +1,5 @@
 package uk.vitalcode.events.crawler.services
 
-import java.io.InputStream
-
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
 import akka.http.scaladsl.model.headers._

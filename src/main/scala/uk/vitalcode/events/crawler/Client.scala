@@ -30,6 +30,7 @@ object Client {
                 .setId("list")
                 .setUrl("http://www.cambridgesciencecentre.org/whats-on/list/")
                 .addPage(PageBuilder()
+                    .isRow(true)
                     .setId("description")
                     .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
                     .addPage(PageBuilder()

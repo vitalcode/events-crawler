@@ -16,9 +16,9 @@ import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration._
 
-case class FetchPage(page: Page)
+case class FetchPage(page: Page, indexId: String)
 
-case class PagesToFetch(pages: Set[Page])
+case class PagesToFetch(pages: Set[Page], indexId: String)
 
 trait RequesterModule {
     this: AppModule =>
@@ -29,9 +29,10 @@ trait RequesterModule {
     with ImplicitMaterializer with ActorLogging {
 
         def receive = {
-            case FetchPage(page) =>
+            case FetchPage(page, id) =>
                 log.info(s"Fetching page [${page.id}] ...")
 
+                var indexId = id
                 val send = sender
                 val timeout = 3000.millis
                 require(page.url != null)
@@ -42,9 +43,16 @@ trait RequesterModule {
                         response.entity.toStrict(timeout).map(entity => {
                             // persist page
                             val pageBody = entity.data.utf8String
+
+                            if (page.isRow) {
+                                indexId = page.url
+                            }
+
                             val dom: Jerry = jerry(pageBody)
                             log.info(logMessage(s"Saving fetched data to the database", page))
-                            hBaseService.saveData(page.url, pageBody)
+                            if (indexId != null) {
+                                hBaseService.saveData(page, pageBody, indexId)
+                            }
 
                             // get child pages or child of the parent if ref is specified
                             var childPages = Set.empty[Page]
@@ -78,7 +86,7 @@ trait RequesterModule {
                             })
                             if (childPages.nonEmpty) {
                                 log.info(logMessage(s"Sending fetching request for ${childPages.size} child pages", page))
-                                send ! PagesToFetch(childPages)
+                                send ! PagesToFetch(childPages, indexId)
                             }
                         })
                     case _ =>

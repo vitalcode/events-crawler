@@ -1,28 +1,15 @@
 package uk.vitalcode.events.crawler.test
 
-import java.io.InputStream
-
 import akka.actor._
-import akka.http.scaladsl.model.{ContentTypes, HttpResponse}
-import akka.testkit._
-import com.softwaremill.macwire._
-import com.typesafe.config.ConfigFactory
-import org.scalamock.scalatest.MockFactory
-import org.scalatest.{BeforeAndAfterAll, Matchers, _}
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.model._
-import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient, TestHBaseService}
+import uk.vitalcode.events.crawler.services.HttpClient
+import uk.vitalcode.events.crawler.test.common.CrawlerTest
 
-import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.Future
 import scala.concurrent.duration._
 
-class ClientCambridgeScienceCentreTest(actorSystem: ActorSystem) extends TestKit(actorSystem)
-with DefaultTimeout with ImplicitSender with WordSpecLike
-with Matchers with BeforeAndAfterAll with MockFactory {
-
-    def this() = this(ClientCambridgeScienceCentreTest.actorSystem)
+class ClientCambridgeScienceCentreTest extends CrawlerTest {
 
     "Client crawling Cambridge science centre web site" should {
 
@@ -30,7 +17,7 @@ with Matchers with BeforeAndAfterAll with MockFactory {
 
         // page 1 list
         (httpClientMock.makeRequest _)
-            .expects("http://www.cambridgesciencecentre.org/whats-on/list")
+            .expects("http://www.cambridgesciencecentre.org/whats-on/list/")
             .returns(getPage("/clientCambridgeScienceCentreTest/list1.html"))
             .once()
 
@@ -118,65 +105,37 @@ with Matchers with BeforeAndAfterAll with MockFactory {
             .returns(getPage("/clientCambridgeScienceCentreTest/destination-space-crew-09012016-1500.jpg"))
             .once()
 
-        val managerModule = new AppModule with ManagerModule with RequesterModule {
-            override lazy val system = actorSystem
-
-            override lazy val page: Page = PageBuilder()
-                .setId("list")
-                .setUrl("http://www.cambridgesciencecentre.org/whats-on/list")
-                .addPage(PageBuilder()
-                    .setId("description")
-                    .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
-                    .addPage(PageBuilder()
-                        .setId("image")
-                        .setLink("section.event_detail > div.page_content > article > img")
-                    )
-                )
-                .addPage(PageBuilder()
-                    .setRef("list")
-                    .setId("pagination")
-                    .setLink("div.pagination > div.omega > a")
-                )
-                .build()
-
-            override lazy val httpClient: HttpClient = httpClientMock
-
-            override lazy val hBaseService: HBaseService = wire[TestHBaseService]
-        }
-
-        val managerRef = managerModule.managerRef
-
         "should fetch data from 9 web pages (3 page lists each with 2 links)" in {
-            within(500.millis) {
-                managerRef ! 1
+
+            val managerModule = new AppModule with ManagerModule with RequesterModule {
+                override lazy val system = testSystem
+                override lazy val page: Page = PageBuilder()
+                    .setId("list")
+                    .setUrl("http://www.cambridgesciencecentre.org/whats-on/list/")
+                    .addPage(PageBuilder()
+                        .isRow(true)
+                        .setId("description")
+                        .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
+                        .addPage(PageBuilder()
+                            .setId("image")
+                            .setLink("section.event_detail > div.page_content > article > img")
+                        )
+                    )
+                    .addPage(PageBuilder()
+                        .setRef("list")
+                        .setId("pagination")
+                        .setLink("div.pagination > div.omega > a")
+                    )
+                    .build()
+
+                override lazy val httpClient: HttpClient = httpClientMock
+            }
+
+            within(10.second) {
+                managerModule.managerRef ! 1
                 expectNoMsg()
             }
         }
     }
-
-    override def afterAll(): Unit = {
-        shutdown()
-    }
-
-    private def getPage(fileUrl: String): Future[HttpResponse] = {
-        Future {
-            val stream: InputStream = getClass.getResourceAsStream(fileUrl)
-            val b: Array[Byte] = Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
-            HttpResponse().withEntity(ContentTypes.`application/json`, b)
-        }
-    }
 }
 
-object ClientCambridgeScienceCentreTest {
-
-    val config = ConfigFactory.parseString(
-        """
-    akka{
-        loggers = ["akka.event.slf4j.Slf4jLogger"]
-        loglevel = "DEBUG"
-        logging-filter = "akka.event.slf4j.Slf4jLoggingFilter"
-    }
-        """)
-
-    val actorSystem: ActorSystem = ActorSystem("ClientCambridgeScienceCentreTest", config)
-}

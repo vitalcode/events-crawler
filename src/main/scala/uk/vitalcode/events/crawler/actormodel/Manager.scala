@@ -19,15 +19,15 @@ trait ManagerModule {
         var completed: Boolean = false
 
         def receive = {
-            case PagesToFetch(pages) =>
+            case PagesToFetch(pages, indexId) =>
                 pages.foreach(pageToFetch => {
                     log.info(s"Manager ask requester to fetch page [$pageToFetch]")
                     val requesterRef = requesterFactory()
-                    requesterRef ! FetchPage(pageToFetch)
+                    requesterRef ! FetchPage(pageToFetch, indexId)
                 })
             case n: Int =>
                 log.info(n.toString)
-                requester ! FetchPage(page)
+                requester ! FetchPage(page, null)
             case strop: Boolean =>
                 log.info("Manager completed job")
                 completed = true

@@ -1,5 +1,5 @@
 name := """events-fetcher"""
-organization := "Vitaliy Kuznetsov & Lesia Mirchenko"
+organization := "vitalcode"
 version := "0.0.1"
 scalaVersion := "2.11.7"
 

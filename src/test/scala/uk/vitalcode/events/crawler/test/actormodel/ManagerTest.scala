@@ -5,7 +5,7 @@ import akka.testkit._
 import org.scalatest.{BeforeAndAfterAll, ShouldMatchers, WordSpecLike}
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.AppModule
-import uk.vitalcode.events.crawler.model.{Page, PageBuilder, PropBuilder, PropType}
+import uk.vitalcode.events.model.{Page, PageBuilder, PropBuilder, PropType}
 
 // TODO add real tests
 class ManagerTest(_system: ActorSystem) extends TestKit(_system) with ImplicitSender

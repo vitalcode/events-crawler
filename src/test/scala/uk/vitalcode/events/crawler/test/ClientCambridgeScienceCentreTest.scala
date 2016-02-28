@@ -1,11 +1,13 @@
 package uk.vitalcode.events.crawler.test
 
 import akka.actor._
+import org.apache.hadoop.hbase.client.Connection
+import uk.vitalcode.events.cambridge
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.AppModule
-import uk.vitalcode.events.crawler.model._
-import uk.vitalcode.events.crawler.services.HttpClient
+import uk.vitalcode.events.crawler.services.{DefaultHBaseService, HBaseService, HttpClient}
 import uk.vitalcode.events.crawler.test.common.CrawlerTest
+import uk.vitalcode.events.model.Page
 
 import scala.concurrent.duration._
 
@@ -109,24 +111,8 @@ class ClientCambridgeScienceCentreTest extends CrawlerTest {
 
             val managerModule = new AppModule with ManagerModule with RequesterModule {
                 override lazy val system = testSystem
-                override lazy val page: Page = PageBuilder()
-                    .setId("list")
-                    .setUrl("http://www.cambridgesciencecentre.org/whats-on/list/")
-                    .addPage(PageBuilder()
-                        .isRow(true)
-                        .setId("description")
-                        .setLink("div.main_wrapper > section > article > ul > li > h2 > a")
-                        .addPage(PageBuilder()
-                            .setId("image")
-                            .setLink("section.event_detail > div.page_content > article > img")
-                        )
-                    )
-                    .addPage(PageBuilder()
-                        .setRef("list")
-                        .setId("pagination")
-                        .setLink("div.pagination > div.omega > a")
-                    )
-                    .build()
+                override lazy val page: Page = cambridge.Pages.cambridgeScienceCentre
+                override lazy val hBaseConnection: Connection = hBaseConn
 
                 override lazy val httpClient: HttpClient = httpClientMock
             }

@@ -57,9 +57,9 @@ with Matchers with BeforeAndAfterAll with MockFactory with LazyLogging {
     }
 
     override def beforeAll(): Unit = {
-        val hBaseConf: Configuration = HBaseConfiguration.create()
+        hBaseConf = HBaseConfiguration.create()
         hBaseConf.set(HConstants.ZOOKEEPER_QUORUM, TestConfig.hbaseZookeeperQuorum)
-        hBaseConf.set(TableInputFormat.INPUT_TABLE, Bytes.toString(testTable.getName))
+        hBaseConf.set(TableInputFormat.INPUT_TABLE, TestConfig.hbaseTable)
         hBaseConn = ConnectionFactory.createConnection(hBaseConf)
 
         createTestTable()

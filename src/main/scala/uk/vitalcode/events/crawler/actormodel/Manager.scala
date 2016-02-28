@@ -4,7 +4,7 @@ import akka.actor._
 import akka.stream.scaladsl.ImplicitMaterializer
 import com.softwaremill.macwire._
 import uk.vitalcode.events.crawler.common.AppModule
-import uk.vitalcode.events.crawler.model.Page
+import uk.vitalcode.events.model.Page
 
 trait ManagerModule {
     this: AppModule with RequesterModule =>
@@ -33,5 +33,4 @@ trait ManagerModule {
                 completed = true
         }
     }
-
 }

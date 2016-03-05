@@ -5,7 +5,7 @@ import org.apache.hadoop.hbase.client.Connection
 import uk.vitalcode.events.cambridge
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.AppModule
-import uk.vitalcode.events.crawler.services.{DefaultHBaseService, HBaseService, HttpClient}
+import uk.vitalcode.events.crawler.services.HttpClient
 import uk.vitalcode.events.crawler.test.common.CrawlerTest
 import uk.vitalcode.events.model.Page
 
@@ -117,8 +117,9 @@ class ClientCambridgeScienceCentreTest extends CrawlerTest {
                 override lazy val httpClient: HttpClient = httpClientMock
             }
 
-            within(10.second) {
-                managerModule.managerRef ! 1
+            within(30.seconds) {
+                val dispose = () => hBaseConn.close()
+                managerModule.managerRef ! dispose
                 expectNoMsg()
             }
         }

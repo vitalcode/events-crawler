@@ -30,68 +30,76 @@ trait RequesterModule {
 
         def receive = {
             case FetchPage(page, id) =>
-                log.info(s"Fetching page [${page.id}] ...")
+                try {
+                    log.info(s"Fetching page [${page.id}] ...")
 
-                var indexId = id
-                val send = sender
-                val timeout = 3000.millis
-                require(page.url != null)
-                log.info(logMessage(s"Fetching data from url [${page.url}]", page))
+                    var indexId = id
+                    val send = sender
+                    val timeout = 3000.millis
+                    require(page.url != null)
+                    log.info(logMessage(s"Fetching data from url [${page.url}]", page))
 
-                httpClient.makeRequest(page.url).map(response => response.status match {
-                    case OK =>
-                        response.entity.toStrict(timeout).map(entity => {
-                            // persist page
-                            val pageBody = entity.data.utf8String
+                    httpClient.makeRequest(page.url).map(response => response.status match {
+                        case OK =>
+                            log.info(logMessage(s"Got response from url [${page.url}]", page))
+                            response.entity.toStrict(timeout).map(entity => {
+                                // persist page
+                                val pageBody = entity.data.utf8String
 
-                            if (page.isRow) {
-                                indexId = page.url
-                            }
+                                if (page.isRow) {
+                                    indexId = page.url
+                                }
 
-                            val dom: Jerry = jerry(pageBody)
-                            log.info(logMessage(s"Saving fetched data to the database", page))
-                            if (indexId != null) {
-                                hBaseService.saveData(page, pageBody, indexId)
-                            }
+                                val dom: Jerry = jerry(pageBody)
+                                log.info(logMessage(s"Saving fetched data to the database", page))
+                                if (indexId != null) {
+                                    hBaseService.saveData(page, pageBody, indexId)
+                                }
 
-                            // get child pages or child of the parent if ref is specified
-                            var childPages = Set.empty[Page]
-                            val pages = if (page.ref == null) {
-                                log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
-                                page.pages
-                            } else {
-                                val parentPage = getParent(page, page.ref)
-                                log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent ${parentPage}", page))
-                                parentPage.pages
-                            }
+                                // get child pages or child of the parent if ref is specified
+                                var childPages = Set.empty[Page]
+                                val pages = if (page.ref == null) {
+                                    log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
+                                    page.pages
+                                } else {
+                                    val parentPage = getParent(page, page.ref)
+                                    log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent ${parentPage}", page))
+                                    parentPage.pages
+                                }
 
-                            pages.foreach(childPage => {
-                                log.info(logMessage(s"Found child css link [${childPage.link}]", page))
+                                pages.foreach(childPage => {
+                                    log.info(logMessage(s"Found child css link [${childPage.link}]", page))
 
-                                val childLink = dom.$(childPage.link)
+                                    val childLink = dom.$(childPage.link)
 
-                                childLink.each(new JerryNodeFunction {
-                                    override def onNode(node: Node, index: Int): Boolean = {
-                                        val baseUri = new URI(page.url)
-                                        val childLinkUrl = node.getAttribute("href")
-                                        val childImageUrl = node.getAttribute("src")
-                                        val childUri = if (childLinkUrl != null) new URI(childLinkUrl) else new URI(childImageUrl)
-                                        val resolvedUri = baseUri.resolve(childUri).toString
-                                        val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
-                                        log.info(logMessage(s"Adding child page [$newChildPage]", page))
-                                        childPages += newChildPage
-                                        true
-                                    }
+                                    childLink.each(new JerryNodeFunction {
+                                        override def onNode(node: Node, index: Int): Boolean = {
+                                            val baseUri = new URI(page.url)
+                                            val childLinkUrl = node.getAttribute("href")
+                                            val childImageUrl = node.getAttribute("src")
+                                            val childUri = if (childLinkUrl != null) new URI(childLinkUrl) else new URI(childImageUrl)
+                                            val resolvedUri = baseUri.resolve(childUri).toString
+                                            val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
+                                            log.info(logMessage(s"Adding child page [$newChildPage]", page))
+                                            childPages += newChildPage
+                                            true
+                                        }
+                                    })
                                 })
+                                if (childPages.nonEmpty) {
+                                    log.info(logMessage(s"Sending fetching request for ${childPages.size} child pages", page))
+                                    send ! PagesToFetch(childPages, indexId)
+                                }
+                                else send ! false
                             })
-                            if (childPages.nonEmpty) {
-                                log.info(logMessage(s"Sending fetching request for ${childPages.size} child pages", page))
-                                send ! PagesToFetch(childPages, indexId)
-                            }
-                        })
-                    case _ =>
-                        send ! false
-                })
+                        case _ =>
+                            send ! false
+                    })
+                } catch {
+                    case e: Exception =>
+                        log.warning(s"Exception: $e")
+                        sender ! false
+                }
             case msg: Any =>
                 log.warning(s"Message not delivered: $msg")
                 sender ! false

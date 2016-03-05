@@ -45,7 +45,8 @@ object Client extends LazyLogging {
 
         createTestTable(hBaseConn)
 
-        managerModule.managerRef ! 1
+        val dispose = () => hBaseConn.close()
+        managerModule.managerRef ! dispose
     }
 
     protected val testTable: TableName = TableName.valueOf(AppConfig.hbaseTable)

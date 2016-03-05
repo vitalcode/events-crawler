@@ -1,4 +1,4 @@
-name := """events-fetcher"""
+name := """events-crawler"""
 organization := "vitalcode"
 version := "0.0.1"
 scalaVersion := "2.11.7"
@@ -60,6 +60,8 @@ libraryDependencies ++= {
         "org.scalamock" %% "scalamock-scalatest-support" % scalamockV % "test"
     )
 }
+
+enablePlugins(JavaAppPackaging)
 
 assemblyMergeStrategy in assembly := {
     case PathList("reference.conf") => MergeStrategy.concat

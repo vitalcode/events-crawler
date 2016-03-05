@@ -18,7 +18,6 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
     implicit val materializer = ActorMaterializer.create(system)
 
     override def makeRequest(url: String): Future[HttpResponse] = {
-        Thread.sleep(AppConfig.throttle)
         Http(system).singleRequest(buildHttpRequest(url))
     }
 

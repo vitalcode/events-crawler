@@ -1,3 +1,14 @@
+# Starting Docker machine on MAC
+$ docker-machine rm default
+$ docker-machine create --driver virtualbox default
+
+To configure Docker
+docker-machine env default
+
+Build docker image
+sbt docker:publishLocal
+
+
 # GIT
 ### git diff
 show differences between working tree and index, changes you haven't staged to commit

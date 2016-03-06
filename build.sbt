@@ -23,6 +23,8 @@ libraryDependencies ++= {
     val macwireV = "2.2.2"
     val configV = "1.3.0"
 
+    val eventsModelV = "0.0.1"
+
     Seq(
         "org.apache.hbase" % "hbase" % hbaseV,
         "org.apache.hbase" % "hbase-client" % hbaseV,
@@ -57,7 +59,9 @@ libraryDependencies ++= {
         "com.softwaremill.macwire" %% "proxy" % macwireV,
 
         "org.scalatest" %% "scalatest" % scalaTestV % "test",
-        "org.scalamock" %% "scalamock-scalatest-support" % scalamockV % "test"
+        "org.scalamock" %% "scalamock-scalatest-support" % scalamockV % "test",
+
+        "vitalcode" %% "events-model" % eventsModelV
     )
 }
 

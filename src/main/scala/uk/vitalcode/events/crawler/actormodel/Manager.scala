@@ -14,7 +14,7 @@ trait ManagerModule {
 
     def requesterFactory = () => requesterRef
 
-    class Manager(requester: ActorRef, page: Page) extends Actor with ActorLogging with ImplicitMaterializer {
+    class Manager(requester: ActorRef, pages: Set[Page]) extends Actor with ActorLogging with ImplicitMaterializer {
 
         var completed: Boolean = false
 
@@ -35,7 +35,7 @@ trait ManagerModule {
             case disposeFunction: (() => Any) =>
                 dispose = disposeFunction
                 addCountDown()
-                requester ! FetchPage(page, null)
+                pages.foreach((page: Page) => requester ! FetchPage(page, null))
             case finish: Boolean =>
                 log.info("Manager completes job")
                 completed = true

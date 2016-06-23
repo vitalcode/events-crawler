@@ -11,7 +11,7 @@ import uk.vitalcode.events.model.Page
 
 trait AppModule {
 
-    val page: Page
+    val pages: Set[Page]
 
     val system: ActorSystem
 

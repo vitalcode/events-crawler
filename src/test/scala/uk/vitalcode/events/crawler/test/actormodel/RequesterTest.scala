@@ -26,7 +26,7 @@ with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
             val managerModule = new AppModule with ManagerModule with RequesterModule {
                 // TODO get system from the test class constructor
                 override lazy val system = ActorSystem("MySpec")
-                override lazy val page: Page = PageBuilder()
+                override lazy val pages: Set[Page] = Set(PageBuilder()
                     .setId("pageA")
                     .setUrl("https://tika.apache.org/download.html")
                     .addProp(PropBuilder()
@@ -38,7 +38,7 @@ with WordSpecLike with ShouldMatchers with BeforeAndAfterAll {
                         .setId("PageB")
                         .setLink(".section p > a:nth-child(2)")
                     )
-                    .build()
+                    .build())
 
                 override lazy val requesterRef: ActorRef = requesterTestRef
             }

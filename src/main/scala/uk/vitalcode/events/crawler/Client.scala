@@ -6,7 +6,7 @@ import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase._
 import org.apache.hadoop.hbase.client.{Admin, Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
-import uk.vitalcode.events.cambridge
+import uk.vitalcode.events.Pages
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.{AppConfig, AppModule}
 import uk.vitalcode.events.model.Page
@@ -39,7 +39,7 @@ object Client extends LazyLogging {
 
         val managerModule = new AppModule with ManagerModule with RequesterModule {
             override lazy val system = ActorSystem("ScrawlerSystem")
-            override lazy val page: Page = cambridge.Pages.cambridgeScienceCentre
+            override lazy val pages: Set[Page] = Pages.all
             override lazy val hBaseConnection: Connection = hBaseConn
         }
 

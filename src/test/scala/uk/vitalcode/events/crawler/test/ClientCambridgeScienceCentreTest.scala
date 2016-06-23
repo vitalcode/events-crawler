@@ -2,7 +2,7 @@ package uk.vitalcode.events.crawler.test
 
 import akka.actor._
 import org.apache.hadoop.hbase.client.Connection
-import uk.vitalcode.events.cambridge
+import uk.vitalcode.events.cambridge.CambridgeScienceCentre
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.services.HttpClient
@@ -111,7 +111,7 @@ class ClientCambridgeScienceCentreTest extends CrawlerTest {
 
             val managerModule = new AppModule with ManagerModule with RequesterModule {
                 override lazy val system = testSystem
-                override lazy val page: Page = cambridge.Pages.cambridgeScienceCentre
+                override lazy val pages: Set[Page] = Set(CambridgeScienceCentre.page)
                 override lazy val hBaseConnection: Connection = hBaseConn
 
                 override lazy val httpClient: HttpClient = httpClientMock

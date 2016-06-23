@@ -1,3 +1,10 @@
+# Build
+How run sbt assembly command without tests
+```
+sbt 'set test in assembly := {}' clean assembly
+```
+
+
 # Starting Docker machine on MAC
 $ docker-machine rm default
 $ docker-machine create --driver virtualbox default

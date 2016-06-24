@@ -34,8 +34,10 @@ trait ManagerModule {
                 })
             case disposeFunction: (() => Any) =>
                 dispose = disposeFunction
-                addCountDown()
-                pages.foreach((page: Page) => requester ! FetchPage(page, null))
+                pages.foreach((page: Page) => {
+                    addCountDown()
+                    requester ! FetchPage(page, null)
+                })
             case finish: Boolean =>
                 log.info("Manager completes job")
                 completed = true

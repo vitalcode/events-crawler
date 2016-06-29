@@ -1,3 +1,5 @@
+import com.typesafe.sbt.packager.docker._
+
 name := """events-crawler"""
 organization := "vitalcode"
 version := "0.0.1"
@@ -61,7 +63,12 @@ libraryDependencies ++= {
         "org.scalatest" %% "scalatest" % scalaTestV % "test",
         "org.scalamock" %% "scalamock-scalatest-support" % scalamockV % "test",
 
-        "vitalcode" %% "events-model" % eventsModelV
+        "vitalcode" %% "events-model" % eventsModelV,
+
+        //"org.seleniumhq.selenium" % "selenium-firefox-driver" % "2.53.0" exclude("com.google.guava", "guava")
+        //"com.machinepublishers" % "jbrowserdriver" % "0.14.7" exclude("com.google.guava", "guava"),
+        "com.github.detro.ghostdriver" % "phantomjsdriver" % "1.1.0"
+
     )
 }
 
@@ -78,3 +85,10 @@ assemblyMergeStrategy in assembly := {
 parallelExecution in Test := false
 assemblyJarName in assembly := "crawler.jar"
 mainClass in assembly := Some("uk.vitalcode.events.crawler.Client")
+
+dockerCommands ++= Seq(
+    ExecCmd("RUN", "wget", "-O", "/tmp/phantomjs-2.1.1-linux-x86_64.tar.bz2",
+        "https://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"
+    ),
+    ExecCmd("RUN", "tar", "jxvf", "/tmp/phantomjs-2.1.1-linux-x86_64.tar.bz2", "-C", "/tmp")
+)

@@ -1,3 +1,7 @@
+#sbt
+
+evicted
+
 # Build
 How run sbt assembly command without tests
 ```

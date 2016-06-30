@@ -88,8 +88,9 @@ mainClass in assembly := Some("uk.vitalcode.events.crawler.Client")
 
 dockerCommands ++= Seq(
     Cmd("USER", "root"),
+    ExecCmd("RUN", "apt-get", "update"),
     ExecCmd("RUN", "apt-get", "install", "bzip2"),
     ExecCmd("RUN", "wget", "http://bitbucket.org/ariya/phantomjs/downloads/phantomjs-2.1.1-linux-x86_64.tar.bz2"),
-    ExecCmd("RUN", "bzip2", "-d", "phantomjs-2.1.1-linux-x86_64.tar.bz2"),
+    //ExecCmd("RUN", "bzip2", "-d", "phantomjs-2.1.1-linux-x86_64.tar.bz2"),
     ExecCmd("RUN", "tar", "jxvf", "phantomjs-2.1.1-linux-x86_64.tar.bz2")
 )

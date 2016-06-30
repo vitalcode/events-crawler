@@ -51,7 +51,7 @@ trait RequesterModule {
                     //caps.setJavascriptEnabled(true); //< not really needed: JS enabled by default
                     //caps.setCapability("takesScreenshot", true); //< yeah, GhostDriver haz screenshotz!
                     caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-                        "lib/phantomjs"
+                        "/opt/phantomjs-2.1.1-linux-x86_64/bin/phantomjs"
                     )
 
                     val driver = new PhantomJSDriver(caps)

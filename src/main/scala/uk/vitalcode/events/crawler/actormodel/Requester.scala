@@ -10,7 +10,7 @@ import com.softwaremill.macwire._
 import jodd.jerry.Jerry._
 import jodd.jerry.{Jerry, JerryNodeFunction}
 import jodd.lagarto.dom.Node
-import org.openqa.selenium.Capabilities
+import org.openqa.selenium.{Capabilities, Dimension}
 import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
 import org.openqa.selenium.remote.DesiredCapabilities
 import uk.vitalcode.events.crawler.common.AppModule
@@ -48,13 +48,14 @@ trait RequesterModule {
                     // http://stackoverflow.com/questions/24365154/web-crawling-ajax-javascript-enabled-pages-using-java
 
                     val caps = new DesiredCapabilities()
-                    //caps.setJavascriptEnabled(true); //< not really needed: JS enabled by default
+                    caps.setJavascriptEnabled(true); //< not really needed: JS enabled by default
                     //caps.setCapability("takesScreenshot", true); //< yeah, GhostDriver haz screenshotz!
                     caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
                         "/opt/phantomjs-2.1.1-linux-x86_64/bin/phantomjs"
                     )
 
                     val driver = new PhantomJSDriver(caps)
+                    driver.manage().window().setSize(new Dimension(1920, 1080))
                     driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS)
 
                     try {

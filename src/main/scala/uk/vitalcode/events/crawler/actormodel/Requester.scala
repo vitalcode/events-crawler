@@ -110,6 +110,11 @@ trait RequesterModule {
                         }
                         else send ! false
                     }
+                    catch {
+                        case e: Exception =>
+                            log.warning(s"Exception: $e")
+                            sender ! false
+                    }
                 } catch {
                     case e: Exception =>
                         log.warning(s"Exception: $e")

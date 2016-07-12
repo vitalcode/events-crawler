@@ -1,7 +1,7 @@
 package uk.vitalcode.events.crawler.actormodel
 
 import akka.actor._
-import akka.stream.scaladsl.ImplicitMaterializer
+import akka.stream.{ActorMaterializer, ActorMaterializerSettings}
 import com.softwaremill.macwire._
 import uk.vitalcode.events.crawler.common.{AppConfig, AppModule}
 import uk.vitalcode.events.model.Page
@@ -14,13 +14,15 @@ trait ManagerModule {
 
     def requesterFactory = () => requesterRef
 
-    class Manager(requester: ActorRef, pages: Set[Page]) extends Actor with ActorLogging with ImplicitMaterializer {
+    class Manager(requester: ActorRef, pages: Set[Page]) extends Actor with ActorLogging {
 
         var completed: Boolean = false
 
         var pagesCount = 0
 
         var dispose: () => Any = _
+
+        final implicit val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
         def receive = {
             case PagesToFetch(pages, indexId) =>

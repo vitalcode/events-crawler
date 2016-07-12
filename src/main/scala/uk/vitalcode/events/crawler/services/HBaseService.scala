@@ -11,7 +11,7 @@ import uk.vitalcode.events.crawler.common.AppConfig
 import uk.vitalcode.events.model.Page
 
 trait HBaseService {
-    def saveData(page: Page, data: String, indexId: String)
+    def saveData(page: Page, data: Array[Byte], indexId: String)
 }
 
 class DefaultHBaseService(hBaseConn: Connection) extends HBaseService with LazyLogging {
@@ -24,13 +24,13 @@ class DefaultHBaseService(hBaseConn: Connection) extends HBaseService with LazyL
     //
     //        val connection: Connection = ConnectionFactory.createConnection(conf)
 
-    override def saveData(page: Page, data: String, indexId: String) = {
+    override def saveData(page: Page, data: Array[Byte], indexId: String) = {
         logger.info(s"Saving data to HBase fetched from url [${page.url}]")
 
         val table: Table = hBaseConn.getTable(TableName.valueOf(AppConfig.hbaseTable))
 
         val put: Put = new Put(Bytes.toBytes(UUID.randomUUID.toString))
-        put.addColumn(Bytes.toBytes("content"), Bytes.toBytes("data"), Bytes.toBytes(data))
+        put.addColumn(Bytes.toBytes("content"), Bytes.toBytes("data"), data)
         put.addColumn(Bytes.toBytes("content"), Bytes.toBytes("hash"), Bytes.toBytes(DigestUtils.sha1Hex(data)))
         put.addColumn(Bytes.toBytes("metadata"), Bytes.toBytes("indexId"), Bytes.toBytes(indexId))
         put.addColumn(Bytes.toBytes("metadata"), Bytes.toBytes("pageId"), Bytes.toBytes(page.id))
@@ -55,7 +55,7 @@ class DefaultHBaseService(hBaseConn: Connection) extends HBaseService with LazyL
 
 class TestHBaseService extends HBaseService with LazyLogging {
 
-    override def saveData(page: Page, data: String, indexId: String) = {
+    override def saveData(page: Page, data: Array[Byte], indexId: String) = {
         val maxLogLenght = 200
 
         logger.info(s"url: [${page.url}]")

@@ -19,8 +19,7 @@ libraryDependencies ++= {
     val hbaseV = s"1.0.0-$clouderaV"
     val scalaTestV = "2.2.5"
     val scalaLoggingV = "3.1.0"
-    val akkaV = "2.3.12"
-    val akkaHttpV = "1.0"
+    val akkaV = "2.4.8"
     val scalamockV = "3.2"
     val macwireV = "2.2.2"
     val configV = "1.3.0"
@@ -46,8 +45,8 @@ libraryDependencies ++= {
         "com.typesafe.akka" %% "akka-actor" % akkaV,
         "com.typesafe.akka" %% "akka-testkit" % akkaV % "test",
         "com.typesafe.akka" %% "akka-slf4j" % akkaV,
-        "com.typesafe.akka" %% "akka-stream-experimental" % akkaHttpV,
-        "com.typesafe.akka" %% "akka-http-experimental" % akkaHttpV,
+        "com.typesafe.akka" %% "akka-stream" % akkaV,
+        "com.typesafe.akka" %% "akka-http-experimental" % akkaV,
 
         "org.jodd" % "jodd-lagarto" % joddV,
         "org.jodd" % "jodd-core" % joddV,
@@ -68,6 +67,9 @@ libraryDependencies ++= {
         //"org.seleniumhq.selenium" % "selenium-firefox-driver" % "2.53.0" exclude("com.google.guava", "guava")
         //"com.machinepublishers" % "jbrowserdriver" % "0.14.7" exclude("com.google.guava", "guava"),
         "com.github.detro.ghostdriver" % "phantomjsdriver" % "1.1.0"
+
+        // https://mvnrepository.com/artifact/com.github.detro/phantomjsdriver
+        //"com.github.detro" % "phantomjsdriver" % "1.2.0"
 
     )
 }

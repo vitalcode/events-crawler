@@ -55,7 +55,7 @@ object Client extends LazyLogging {
 
         val admin: Admin = hBaseConn.getAdmin()
         if (admin.isTableAvailable(testTable)) {
-            admin.disableTable(testTable)
+            if(!admin.isTableDisabled(testTable)) admin.disableTable(testTable)
             admin.deleteTable(testTable)
             logger.info(s"Test table [$testTable] deleted")
         }

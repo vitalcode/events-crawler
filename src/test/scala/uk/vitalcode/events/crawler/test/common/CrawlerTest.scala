@@ -4,7 +4,10 @@ import java.io.InputStream
 
 import akka.actor._
 import akka.http.scaladsl.model.{ContentTypes, HttpResponse}
+import akka.stream.IOResult
+import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.testkit._
+import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.hadoop.conf.Configuration
@@ -19,8 +22,8 @@ import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 
 abstract class CrawlerTest(actorSystem: ActorSystem) extends TestKit(actorSystem)
-with DefaultTimeout with ImplicitSender with WordSpecLike
-with Matchers with BeforeAndAfterAll with MockFactory with LazyLogging {
+    with DefaultTimeout with ImplicitSender with WordSpecLike
+    with Matchers with BeforeAndAfterAll with MockFactory with LazyLogging {
 
     protected var hBaseConn: Connection = _
     protected var hBaseConf: Configuration = _
@@ -30,19 +33,25 @@ with Matchers with BeforeAndAfterAll with MockFactory with LazyLogging {
 
     protected def testSystem = CrawlerTest.actorSystem
 
-    protected def getPage(fileUrl: String): Future[HttpResponse] = {
+    //    protected def getPage(fileUrl: String): Future[HttpResponse] = {
+    //        Future {
+    //            val stream: InputStream = getClass.getResourceAsStream(fileUrl)
+    //            val b: Array[Byte] = Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
+    //            HttpResponse().withEntity(ContentTypes.`application/json`, b)
+    //        }
+    //    }
+    protected def getPage(fileUrl: String): Future[Source[ByteString, Any]] = {
         Future {
-            val stream: InputStream = getClass.getResourceAsStream(fileUrl)
-            val b: Array[Byte] = Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
-            HttpResponse().withEntity(ContentTypes.`application/json`, b)
+            //val stream: InputStream = getClass.getResourceAsStream(fileUrl)
+            StreamConverters.fromInputStream(() => getClass.getResourceAsStream(fileUrl), 1000000) //ByteString(scala.io.Source.fromInputStream(stream).mkString)) // TODO
         }
     }
 
     private def createTestTable(): Unit = {
 
-        val admin: Admin = hBaseConn.getAdmin()
+        val admin: Admin = hBaseConn.getAdmin
         if (admin.isTableAvailable(testTable)) {
-            admin.disableTable(testTable)
+            if(!admin.isTableDisabled(testTable)) admin.disableTable(testTable)
             admin.deleteTable(testTable)
             logger.info(s"Test table [$testTable] deleted")
         }

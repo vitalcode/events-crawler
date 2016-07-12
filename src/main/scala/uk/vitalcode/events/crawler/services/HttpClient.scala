@@ -55,12 +55,12 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
             protocol = HttpProtocols.`HTTP/1.0`)
     }
 
-    private def getWebPage(url: String): Future[Source[ByteString, Any]] =
+    private def getImage(url: String): Future[Source[ByteString, Any]] =
         Http(system)
             .singleRequest(buildHttpRequest(url))
             .map(r => r.entity.dataBytes)
 
-    private def getImage(url: String): Future[Source[ByteString, Any]] = {
+    private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()
         // From: http://stackoverflow.com/questions/25094568/best-practices-with-akka-in-scala-and-third-party-java-libraries
         // Other: http://stackoverflow.com/questions/31226569/how-to-wrap-blocking-io-in-scala-as-non-blocking

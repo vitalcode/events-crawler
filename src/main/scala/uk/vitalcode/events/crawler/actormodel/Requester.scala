@@ -61,7 +61,7 @@ trait RequesterModule {
                         case Success(pageBodyStream: Source[ByteString, Any]) => {
 
                             val inputStream = pageBodyStream.runWith(
-                                StreamConverters.asInputStream(FiniteDuration(3, TimeUnit.SECONDS))
+                                StreamConverters.asInputStream(FiniteDuration(5, TimeUnit.MINUTES)) // Try catch
                             )
                             val bytes: Array[Byte] = IOUtils.toByteArray(inputStream)
                             val pageBody: String = new String(bytes, "UTF-8")

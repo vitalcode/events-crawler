@@ -36,7 +36,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
         val driver = new PhantomJSDriver(caps)
         driver.manage().window().setSize(new Dimension(1920, 1080))
-        driver.manage().timeouts().implicitlyWait(30, TimeUnit.SECONDS) // TODO may be removed
+        driver.manage().timeouts().implicitlyWait(5, TimeUnit.MINUTES) // TODO may be removed
         driver
     }
 

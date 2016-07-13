@@ -30,9 +30,15 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
         val caps = new DesiredCapabilities()
         caps.setJavascriptEnabled(true) // TODO may be removed
+        caps.setCapability("takesScreenshot", false)
+        caps.setCapability("phantomjs.page.settings.loadImages", false)
+        caps.setCapability("phantomjs.page.settings.userAgent",
+            "Mozilla/5.0 (Windows NT 10.0; WOW64)  AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36")
         caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
             "/opt/phantomjs-2.1.1-linux-x86_64/bin/phantomjs"
         )
+//        caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
+//            FileUtil.getProperties().getProperty("phantomjsLocation"));
 
         val driver = new PhantomJSDriver(caps)
         driver.manage().window().setSize(new Dimension(1920, 1080))

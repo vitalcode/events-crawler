@@ -39,7 +39,8 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
         val driver = new PhantomJSDriver(caps)
         driver.manage().window().setSize(new Dimension(AppConfig.httpClientWindowWidth, AppConfig.httpClientWindowHeight))
-        driver.manage().timeouts().implicitlyWait(AppConfig.httpClientTimeout, TimeUnit.MICROSECONDS)
+        driver.manage().timeouts().setScriptTimeout(AppConfig.httpClientTimeout, TimeUnit.SECONDS)
+        driver.manage().timeouts().pageLoadTimeout(AppConfig.httpClientTimeout, TimeUnit.SECONDS)
         driver
     }
 

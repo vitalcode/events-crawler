@@ -66,10 +66,10 @@ libraryDependencies ++= {
 
         //"org.seleniumhq.selenium" % "selenium-firefox-driver" % "2.53.0" exclude("com.google.guava", "guava")
         //"com.machinepublishers" % "jbrowserdriver" % "0.14.7" exclude("com.google.guava", "guava"),
-        "com.github.detro.ghostdriver" % "phantomjsdriver" % "1.1.0"
+        //"com.github.detro.ghostdriver" % "phantomjsdriver" % "1.1.0"
 
         // https://mvnrepository.com/artifact/com.github.detro/phantomjsdriver
-        //"com.github.detro" % "phantomjsdriver" % "1.2.0"
+        "com.github.detro" % "phantomjsdriver" % "1.2.0"
 
     )
 }

@@ -13,7 +13,6 @@ import org.openqa.selenium.Dimension
 import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
 import org.openqa.selenium.remote.DesiredCapabilities
 import uk.vitalcode.events.crawler.common.AppConfig
-import uk.vitalcode.events.model.{Page, PropType}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.{Future, Promise}
@@ -26,33 +25,31 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     implicit val materializer = ActorMaterializer.create(system)
 
-    private def createPhantomDriver() = {
+    override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
+        if (phantom) getWebPage(url) else getImage(url)
+    }
 
+    private def createPhantomDriver(): PhantomJSDriver = {
         val caps = new DesiredCapabilities()
-        caps.setJavascriptEnabled(true) // TODO may be removed
+        caps.setJavascriptEnabled(true)
         caps.setCapability("takesScreenshot", false)
         caps.setCapability("phantomjs.page.settings.loadImages", false)
-        caps.setCapability("phantomjs.page.settings.userAgent",
-            "Mozilla/5.0 (Windows NT 10.0; WOW64)  AppleWebKit/537.36 (KHTML, like Gecko) Chrome/44.0.2403.157 Safari/537.36")
-        caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-            "/opt/phantomjs-2.1.1-linux-x86_64/bin/phantomjs"
-        )
-//        caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY,
-//            FileUtil.getProperties().getProperty("phantomjsLocation"));
+        caps.setCapability("phantomjs.page.settings.userAgent", AppConfig.httpClientUserAgent)
+        caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, AppConfig.httpClientPhantomPath)
 
         val driver = new PhantomJSDriver(caps)
-        driver.manage().window().setSize(new Dimension(1920, 1080))
-        driver.manage().timeouts().implicitlyWait(5, TimeUnit.MINUTES) // TODO may be removed
+        driver.manage().window().setSize(new Dimension(AppConfig.httpClientWindowWidth, AppConfig.httpClientWindowHeight))
+        driver.manage().timeouts().implicitlyWait(AppConfig.httpClientTimeout, TimeUnit.MICROSECONDS)
         driver
     }
 
     private def buildHttpRequest(url: String): HttpRequest = {
         val acceptEncoding = headers.`Accept-Encoding`(
-            List(HttpEncodingRange(HttpEncodings gzip), HttpEncodingRange(HttpEncodings.deflate)))
+            List(HttpEncodingRange(HttpEncodings.gzip), HttpEncodingRange(HttpEncodings.deflate)))
         val accept = headers.Accept(
             List(MediaRange(MediaTypes.`text/html`), MediaRange(MediaTypes.`application/xml`),
                 MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
-        val userAgent = headers.`User-Agent`(AppConfig.userAgent)
+        val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
 
         HttpRequest(
             uri = url,
@@ -68,25 +65,19 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()
-        // From: http://stackoverflow.com/questions/25094568/best-practices-with-akka-in-scala-and-third-party-java-libraries
-        // Other: http://stackoverflow.com/questions/31226569/how-to-wrap-blocking-io-in-scala-as-non-blocking
         Future {
             try {
                 val driver = createPhantomDriver()
                 driver.get(url)
-                val pageBody = driver.getPageSource
+                val page = driver.getPageSource
                 driver.quit()
-                p.success(Source.single(ByteString(pageBody)))
+                p.success(Source.single(ByteString(page)))
             } catch {
                 case e: Exception =>
                     p.failure(e)
             }
         }
         p.future
-    }
-
-    override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
-        if (!phantom) getImage(url) else getWebPage(url)
     }
 }
 

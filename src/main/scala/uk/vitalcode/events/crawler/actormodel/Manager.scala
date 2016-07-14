@@ -29,7 +29,7 @@ trait ManagerModule {
                 removeCountDown()
                 log.info(s"Manager got PagesToFetch request [${PagesToFetch(pages, indexId)}]")
                 pages.foreach(pageToFetch => {
-                    Thread.sleep(AppConfig.throttle)
+                    Thread.sleep(AppConfig.httpClientThrottle)
                     log.info(s"Manager ask requester to fetch page [$pageToFetch]")
                     addCountDown()
                     requesterFactory() ! FetchPage(pageToFetch, indexId)

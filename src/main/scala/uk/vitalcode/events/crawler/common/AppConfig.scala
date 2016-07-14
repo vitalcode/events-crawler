@@ -6,19 +6,19 @@ object AppConfig {
 
     val conf: Config = ConfigFactory.load()
 
-    def userAgent: String = {
-        conf.getString("crawler.httpClient.userAgent")
-    }
+    def httpClientUserAgent: String = conf.getString("crawler.httpClient.userAgent")
 
-    def throttle: Int = {
-        conf.getInt("crawler.httpClient.throttle")
-    }
+    def httpClientThrottle: Int = conf.getInt("crawler.httpClient.throttle")
 
-    def hbaseTable: String = {
-        conf.getString("crawler.hbase.table")
-    }
+    def httpClientTimeout: Int = conf.getInt("crawler.httpClient.timeout")
 
-    def hbaseZookeeperQuorum: String = {
-        conf.getString("crawler.hbase.zookeeperQuorum")
-    }
+    def httpClientPhantomPath: String = conf.getString("crawler.httpClient.phantom.path")
+
+    def httpClientWindowWidth: Int = conf.getInt("crawler.httpClient.phantom.windowWidth")
+
+    def httpClientWindowHeight: Int = conf.getInt("crawler.httpClient.phantom.windowHeight")
+
+    def hbaseTable: String = conf.getString("crawler.hbase.table")
+
+    def hbaseZookeeperQuorum: String = conf.getString("crawler.hbase.zookeeperQuorum")
 }

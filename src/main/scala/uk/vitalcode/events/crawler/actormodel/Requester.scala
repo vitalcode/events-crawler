@@ -1,36 +1,25 @@
 package uk.vitalcode.events.crawler.actormodel
 
-import java.io.{BufferedOutputStream, FileOutputStream, InputStream, OutputStream}
 import java.net.URI
 import java.util.concurrent.TimeUnit
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import akka.http.scaladsl.model.StatusCodes._
-import akka.stream.scaladsl.Source
+import akka.actor.{Actor, ActorLogging, ActorRef, Props, _}
+import akka.stream._
+import akka.stream.scaladsl.{Source, _}
 import akka.util.ByteString
 import com.softwaremill.macwire._
 import jodd.jerry.Jerry._
 import jodd.jerry.{Jerry, JerryNodeFunction}
 import jodd.lagarto.dom.Node
-import org.openqa.selenium.{Capabilities, Dimension}
-import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
-import org.openqa.selenium.remote.DesiredCapabilities
-import uk.vitalcode.events.crawler.common.AppModule
+import org.apache.commons.io.IOUtils
+import uk.vitalcode.events.crawler.common.{AppConfig, AppModule}
 import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 import uk.vitalcode.events.model.{Page, PropType}
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.Future
 import scala.concurrent.duration._
 import scala.util.{Failure, Success}
-import scala.concurrent._
-import akka._
-import akka.actor._
-import akka.stream._
-import akka.stream.scaladsl._
-import akka.util._
-import org.apache.commons.io.IOUtils
-
-//import org.openqa.selenium.firefox.FirefoxDriver
 
 case class FetchPage(page: Page, indexId: String)
 
@@ -46,103 +35,80 @@ trait RequesterModule {
         final implicit val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
         def receive = {
-            case FetchPage(page, id) =>
-                try {
-                    log.info(s"Fetching page [${page.id}] ...")
-
-                    var indexId = id
-                    val send = sender
-                    val timeout = 3000.millis
-                    require(page.url != null)
-                    log.info(logMessage(s"Fetching data from url [${page.url}]", page))
-
-
-                    httpClient.makeRequest(page.url, !page.props.exists(prop => prop.kind == PropType.Image)).onComplete {
-                        case Success(pageBodyStream: Source[ByteString, Any]) => {
-
-                            try {
-                                val inputStream = pageBodyStream.runWith(
-                                    StreamConverters.asInputStream(FiniteDuration(5, TimeUnit.MINUTES)) // Try catch
-                                )
-                                val bytes: Array[Byte] = IOUtils.toByteArray(inputStream)
-                                val pageBody: String = new String(bytes, "UTF-8")
-
-                                if (page.isRow) {
-                                    indexId = page.url
-                                }
-
-                                val dom: Jerry = jerry(pageBody)
-                                log.info(logMessage(s"Saving fetched data to the database", page))
-                                if (indexId != null) {
-                                    hBaseService.saveData(page, bytes, indexId)
-                                }
-
-                                // get child pages or child of the parent if ref is specified
-                                var childPages = Set.empty[Page]
-                                val pages = if (page.ref == null) {
-                                    log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
-                                    page.pages
-                                } else {
-                                    val parentPage = getParent(page, page.ref)
-                                    log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent ${parentPage}", page))
-                                    parentPage.pages
-                                }
-
-                                pages.foreach(childPage => {
-                                    log.info(logMessage(s"Found child css link [${childPage.link}]", page))
-
-                                    val childLink = dom.$(childPage.link)
-
-                                    childLink.each(new JerryNodeFunction {
-                                        override def onNode(node: Node, index: Int): Boolean = {
-                                            val baseUri = new URI(page.url)
-                                            val childLinkUrl = node.getAttribute("href")
-                                            val childImageUrl = node.getAttribute("src")
-                                            val childUri = if (childLinkUrl != null) new URI(childLinkUrl) else new URI(childImageUrl)
-                                            val resolvedUri = baseUri.resolve(childUri).toString
-                                            val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
-                                            log.info(logMessage(s"Adding child page [$newChildPage]", page))
-                                            childPages += newChildPage
-                                            true
-                                        }
-                                    })
-                                })
-                                if (childPages.nonEmpty) {
-                                    log.info(logMessage(s"Sending fetching request for ${childPages.size} child pages", page))
-                                    send ! PagesToFetch(childPages, indexId)
-                                }
-                                else send ! false
-                            }
-                            catch {
-                                case e: Exception =>
-                                    log.warning(s"Exception: $e")
-                                    sender ! false
-                            }
-
+            case FetchPage(page, indexId) =>
+                val senderRef = sender
+                val newIndexId = if (page.isRow) page.url else indexId
+                fetchPage(page, newIndexId).onComplete {
+                    case Success(nextPages) => {
+                        if (nextPages.nonEmpty) {
+                            log.info(logMessage(s"Sending fetching request for ${nextPages.size} child pages", page))
+                            senderRef ! PagesToFetch(nextPages, newIndexId)
                         }
-                        case Failure(ex) => {
-                            log.warning(s"This grinder needs a replacement, seriously! $ex")
-                            send ! false
-                        }
+                        else senderRef ! false
                     }
-
-                } catch {
-                    case e: Exception =>
-                        log.warning(s"Exception: $e")
-                        sender ! false
+                    case Failure(ex) => {
+                        log.warning(logMessage(s"Error during page fetching: $ex", page))
+                        senderRef ! false
+                    }
                 }
             case msg: Any =>
                 log.warning(s"Message not delivered: $msg")
                 sender ! false
         }
 
-        def getParent(page: Page, ref: String): Page = {
-            if (page.id.equals(ref)) page else getParent(page.parent, ref)
+        private def fetchPage(page: Page, indexId: String): Future[Set[Page]] = {
+            log.info(logMessage(s"Fetching data from url [${page.url}]", page))
+
+            httpClient.makeRequest(page.url, !page.props.exists(prop => prop.kind == PropType.Image)).map((pageBodyStream: Source[ByteString, Any]) => {
+                val pageBodyBytes = getPageBytes(pageBodyStream)
+
+                log.info(logMessage(s"Saving fetched data to the database", page))
+                if (indexId != null) {
+                    hBaseService.saveData(page, pageBodyBytes, indexId)
+                }
+
+                val childPages = if (page.ref == null) {
+                    log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
+                    page.pages
+                } else {
+                    val parentPage = getParent(page, page.ref)
+                    log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent $parentPage", page))
+                    parentPage.pages
+                }
+
+                val dom: Jerry = jerry(new String(pageBodyBytes, "UTF-8"))
+
+                childPages.flatMap(childPage => {
+                    var nextPages = Set.empty[Page]
+                    log.info(logMessage(s"Found child css link [${childPage.link}]", page))
+                    dom.$(childPage.link).each(new JerryNodeFunction {
+                        override def onNode(node: Node, index: Int): Boolean = {
+                            val baseUri = new URI(page.url)
+                            val childLinkUrl = node.getAttribute("href")
+                            val childImageUrl = node.getAttribute("src")
+                            val childUri = if (childLinkUrl != null) new URI(childLinkUrl) else new URI(childImageUrl)
+                            val resolvedUri = baseUri.resolve(childUri).toString
+                            val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
+                            log.info(logMessage(s"Adding child page [$newChildPage]", page))
+                            nextPages += newChildPage
+                            true
+                        }
+                    })
+                    nextPages
+                })
+            })
         }
 
-        def logMessage(message: String, page: Page): String = {
-            s"[${page.id}] $message ([$page])"
+        private def getPageBytes(pageBodyStream: Source[ByteString, Any]): Array[Byte] = {
+            val inputStream = pageBodyStream.runWith(
+                StreamConverters.asInputStream(FiniteDuration(AppConfig.httpClientTimeout, TimeUnit.SECONDS))
+            )
+            IOUtils.toByteArray(inputStream)
         }
+
+        private def getParent(page: Page, ref: String): Page = if (page.id.equals(ref)) page else getParent(page.parent, ref)
+
+        private def logMessage(message: String, page: Page): String = s"[${page.id}] $message ([$page])"
     }
 
 }

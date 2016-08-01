@@ -26,8 +26,13 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     implicit val materializer = ActorMaterializer.create(system)
 
+//    override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
+//        if (phantom) getWebPage(url) else getImage(url)
+//    }
+
+
     override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
-        if (phantom) getWebPage(url) else getImage(url)
+        getWebPage(url)
     }
 
     private def createPhantomDriver(): PhantomJSDriver = {
@@ -47,25 +52,41 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         driver
     }
 
-    private def buildHttpRequest(url: String): HttpRequest = {
-        val acceptEncoding = headers.`Accept-Encoding`(
-            List(HttpEncodingRange(HttpEncodings.gzip), HttpEncodingRange(HttpEncodings.deflate)))
-        val accept = headers.Accept(
-            List(MediaRange(MediaTypes.`text/html`), MediaRange(MediaTypes.`application/xml`),
-                MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
-        val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
+//    private def buildHttpRequest(url: String): HttpRequest = {
+//        val acceptEncoding = headers.`Accept-Encoding`(
+//            List(HttpEncodingRange(HttpEncodings.gzip), HttpEncodingRange(HttpEncodings.deflate)))
+//        val accept = headers.Accept(
+//            List(MediaRange(MediaTypes.`text/html`), MediaRange(MediaTypes.`application/xml`),
+//                MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
+//        val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
+//
+//        HttpRequest(
+//            uri = url,
+//            method = HttpMethods.GET,
+//            headers = List(acceptEncoding, accept, userAgent),
+//            protocol = HttpProtocols.`HTTP/1.0`)
+//    }
 
-        HttpRequest(
-            uri = url,
-            method = HttpMethods.GET,
-            headers = List(acceptEncoding, accept, userAgent),
-            protocol = HttpProtocols.`HTTP/1.0`)
-    }
+    //    private def getImage(url: String): Future[Source[ByteString, Any]] =
+    //    //        Http(system)
+    //    //            .singleRequest(buildHttpRequest(url))
+    //    //            .map(r => r.entity.dataBytes)
+    //        Future {Source.empty[ByteString]}
 
-    private def getImage(url: String): Future[Source[ByteString, Any]] =
-        Source.single(buildHttpRequest(url))
-            .map(r => r.entity.dataBytes)
-            .runWith(Sink.head)
+    //    private def getImage(url: String): Future[Source[ByteString, Any]] =
+    //        Source.single(buildHttpRequest(url))
+    //                .map(r => r.entity.dataBytes)
+    //                .runWith(Sink.head)
+
+
+//    val connectionFlow: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]] = Http(system).outgoingConnection("")
+//
+//    private def getImage(url: String): Future[Source[ByteString, Any]] = {
+//        Source.single(buildHttpRequest(url))
+//            .via(connectionFlow)
+//            .runWith(Sink.head)
+//            .map(r => r.entity.dataBytes)
+//    }
 
     private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()

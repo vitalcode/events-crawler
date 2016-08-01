@@ -3,12 +3,10 @@ package uk.vitalcode.events.crawler.services
 import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
-import akka.http.scaladsl.Http
-import akka.http.scaladsl.Http.OutgoingConnection
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Flow, Sink, Source}
+import akka.stream.scaladsl.{Sink, Source}
 import akka.util.ByteString
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
@@ -26,13 +24,8 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     implicit val materializer = ActorMaterializer.create(system)
 
-//    override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
-//        if (phantom) getWebPage(url) else getImage(url)
-//    }
-
-
     override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
-        getWebPage(url)
+        if (phantom) getWebPage(url) else getImage(url)
     }
 
     private def createPhantomDriver(): PhantomJSDriver = {
@@ -52,41 +45,25 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         driver
     }
 
-//    private def buildHttpRequest(url: String): HttpRequest = {
-//        val acceptEncoding = headers.`Accept-Encoding`(
-//            List(HttpEncodingRange(HttpEncodings.gzip), HttpEncodingRange(HttpEncodings.deflate)))
-//        val accept = headers.Accept(
-//            List(MediaRange(MediaTypes.`text/html`), MediaRange(MediaTypes.`application/xml`),
-//                MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
-//        val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
-//
-//        HttpRequest(
-//            uri = url,
-//            method = HttpMethods.GET,
-//            headers = List(acceptEncoding, accept, userAgent),
-//            protocol = HttpProtocols.`HTTP/1.0`)
-//    }
+    private def buildHttpRequest(url: String): HttpRequest = {
+        val acceptEncoding = headers.`Accept-Encoding`(
+            List(HttpEncodingRange(HttpEncodings.gzip), HttpEncodingRange(HttpEncodings.deflate)))
+        val accept = headers.Accept(
+            List(MediaRange(MediaTypes.`text/html`), MediaRange(MediaTypes.`application/xml`),
+                MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
+        val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
 
-    //    private def getImage(url: String): Future[Source[ByteString, Any]] =
-    //    //        Http(system)
-    //    //            .singleRequest(buildHttpRequest(url))
-    //    //            .map(r => r.entity.dataBytes)
-    //        Future {Source.empty[ByteString]}
+        HttpRequest(
+            uri = url,
+            method = HttpMethods.GET,
+            headers = List(acceptEncoding, accept, userAgent),
+            protocol = HttpProtocols.`HTTP/1.0`)
+    }
 
-    //    private def getImage(url: String): Future[Source[ByteString, Any]] =
-    //        Source.single(buildHttpRequest(url))
-    //                .map(r => r.entity.dataBytes)
-    //                .runWith(Sink.head)
-
-
-//    val connectionFlow: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]] = Http(system).outgoingConnection("")
-//
-//    private def getImage(url: String): Future[Source[ByteString, Any]] = {
-//        Source.single(buildHttpRequest(url))
-//            .via(connectionFlow)
-//            .runWith(Sink.head)
-//            .map(r => r.entity.dataBytes)
-//    }
+    private def getImage(url: String): Future[Source[ByteString, Any]] =
+        Source.single(buildHttpRequest(url))
+            .map(r => r.entity.dataBytes)
+            .runWith(Sink.head)
 
     private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()

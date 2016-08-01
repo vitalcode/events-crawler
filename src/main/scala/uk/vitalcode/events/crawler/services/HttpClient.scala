@@ -7,7 +7,7 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.Source
+import akka.stream.scaladsl.{Flow, Sink, Source}
 import akka.util.ByteString
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
@@ -61,11 +61,16 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
             protocol = HttpProtocols.`HTTP/1.0`)
     }
 
+//    private def getImage(url: String): Future[Source[ByteString, Any]] =
+//    //        Http(system)
+//    //            .singleRequest(buildHttpRequest(url))
+//    //            .map(r => r.entity.dataBytes)
+//        Future {Source.empty[ByteString]}
+
     private def getImage(url: String): Future[Source[ByteString, Any]] =
-//        Http(system)
-//            .singleRequest(buildHttpRequest(url))
-//            .map(r => r.entity.dataBytes)
-        Future {Source.empty[ByteString]}
+        Source.single(HttpRequest(uri = url))
+                .map(r => r.entity.dataBytes)
+                .runWith(Sink.head)
 
     private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()

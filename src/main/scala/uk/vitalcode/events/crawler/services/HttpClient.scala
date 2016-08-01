@@ -75,7 +75,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
 
     private def getImage(url: String): Future[Source[ByteString, Any]] = {
-        val connectionFlow: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]] = Http().outgoingConnection(url)
+        val connectionFlow: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]] = Http(system).outgoingConnection(url)
         Source.single(buildHttpRequest(url))
             .via(connectionFlow)
             .runWith(Sink.head)

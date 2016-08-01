@@ -62,9 +62,10 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
     }
 
     private def getImage(url: String): Future[Source[ByteString, Any]] =
-        Http(system)
-            .singleRequest(buildHttpRequest(url))
-            .map(r => r.entity.dataBytes)
+//        Http(system)
+//            .singleRequest(buildHttpRequest(url))
+//            .map(r => r.entity.dataBytes)
+        Future {Source.empty[ByteString]}
 
     private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()

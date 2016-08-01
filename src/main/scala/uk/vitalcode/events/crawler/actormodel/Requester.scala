@@ -47,7 +47,7 @@ trait RequesterModule {
                         else senderRef ! false
                     }
                     case Failure(ex) => {
-                        log.warning(logMessage(s"Error during page fetching: $ex", page))
+                        log.warning(logMessage(s"Error during page fetching: ${ex.getMessage} --> ${ex.getStackTrace}", page))
                         senderRef ! false
                     }
                 }

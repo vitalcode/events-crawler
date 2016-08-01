@@ -32,15 +32,17 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
     private def createPhantomDriver(): PhantomJSDriver = {
         val caps = new DesiredCapabilities()
         caps.setJavascriptEnabled(true)
-        caps.setCapability("takesScreenshot", false)
+        caps.setCapability("phantomjs.page.settings.takesScreenshot", false)
         caps.setCapability("phantomjs.page.settings.loadImages", false)
         caps.setCapability("phantomjs.page.settings.userAgent", AppConfig.httpClientUserAgent)
+        caps.setCapability("phantomjs.page.settings.resourceTimeout", AppConfig.httpClientTimeout)
         caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, AppConfig.httpClientPhantomPath)
 
         val driver = new PhantomJSDriver(caps)
         driver.manage().window().setSize(new Dimension(AppConfig.httpClientWindowWidth, AppConfig.httpClientWindowHeight))
-        driver.manage().timeouts().setScriptTimeout(AppConfig.httpClientTimeout, TimeUnit.SECONDS)
-        driver.manage().timeouts().pageLoadTimeout(AppConfig.httpClientTimeout, TimeUnit.SECONDS)
+        driver.manage().timeouts().setScriptTimeout(AppConfig.httpClientTimeout, TimeUnit.MILLISECONDS)
+        driver.manage().timeouts().pageLoadTimeout(AppConfig.httpClientTimeout, TimeUnit.MILLISECONDS)
+        driver.manage().timeouts().implicitlyWait(AppConfig.httpClientTimeout, TimeUnit.MILLISECONDS)
         driver
     }
 

@@ -68,7 +68,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 //        Future {Source.empty[ByteString]}
 
     private def getImage(url: String): Future[Source[ByteString, Any]] =
-        Source.single(HttpRequest(uri = url))
+        Source.single(buildHttpRequest(url))
                 .map(r => r.entity.dataBytes)
                 .runWith(Sink.head)
 

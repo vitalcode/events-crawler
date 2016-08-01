@@ -4,6 +4,7 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.Http.OutgoingConnection
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
@@ -61,16 +62,25 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
             protocol = HttpProtocols.`HTTP/1.0`)
     }
 
-//    private def getImage(url: String): Future[Source[ByteString, Any]] =
-//    //        Http(system)
-//    //            .singleRequest(buildHttpRequest(url))
-//    //            .map(r => r.entity.dataBytes)
-//        Future {Source.empty[ByteString]}
+    //    private def getImage(url: String): Future[Source[ByteString, Any]] =
+    //    //        Http(system)
+    //    //            .singleRequest(buildHttpRequest(url))
+    //    //            .map(r => r.entity.dataBytes)
+    //        Future {Source.empty[ByteString]}
 
-    private def getImage(url: String): Future[Source[ByteString, Any]] =
+    //    private def getImage(url: String): Future[Source[ByteString, Any]] =
+    //        Source.single(buildHttpRequest(url))
+    //                .map(r => r.entity.dataBytes)
+    //                .runWith(Sink.head)
+
+
+    private def getImage(url: String): Future[Source[ByteString, Any]] = {
+        val connectionFlow: Flow[HttpRequest, HttpResponse, Future[OutgoingConnection]] = Http().outgoingConnection(url)
         Source.single(buildHttpRequest(url))
-                .map(r => r.entity.dataBytes)
-                .runWith(Sink.head)
+            .via(connectionFlow)
+            .runWith(Sink.head)
+            .map(r => r.entity.dataBytes)
+    }
 
     private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
         val p = Promise[Source[ByteString, Any]]()

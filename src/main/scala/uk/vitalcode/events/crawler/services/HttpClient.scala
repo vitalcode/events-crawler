@@ -4,9 +4,11 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
+import akka.http.scaladsl.model.HttpEntity.Strict
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
+import akka.stream.javadsl.Source
 import akka.stream.scaladsl.{Sink, Source, StreamConverters}
 import akka.util.ByteString
 import org.apache.commons.io.IOUtils
@@ -19,6 +21,7 @@ import uk.vitalcode.events.crawler.common.AppConfig
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
+import scala.concurrent.duration._
 
 trait HttpClient {
     def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]]
@@ -66,7 +69,26 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     private def getImage(url: String): Future[Array[Byte]] =
         Http(system).singleRequest(buildHttpRequest(url))
-            .map(r => {
+            .map(response => {
+
+                response.entity.toStrict(60.second)
+                    .map(b => {
+                        val d: ByteString =  ByteString. b.getData()
+                    }
+
+                    )
+
+
+
+
+//                val transformedData: Future[ExamplePerson] =
+//                    strictEntity flatMap { e =>
+//                        e.dataBytes
+//                            .runFold(ByteString.empty) { case (acc, b) => acc ++ b }
+//                            .map(parse)
+//                    }
+
+
                 val inputStream = r.entity.dataBytes.runWith(
                     StreamConverters.asInputStream(FiniteDuration(AppConfig.httpClientTimeout, TimeUnit.SECONDS))
                 )

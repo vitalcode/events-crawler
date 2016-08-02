@@ -69,31 +69,8 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     private def getImage(url: String): Future[Array[Byte]] =
         Http(system).singleRequest(buildHttpRequest(url))
-            .map(response => {
-
-                response.entity.toStrict(60.second)
-                    .map(b => {
-                        val d: ByteString =  ByteString. b.getData()
-                    }
-
-                    )
-
-
-
-
-//                val transformedData: Future[ExamplePerson] =
-//                    strictEntity flatMap { e =>
-//                        e.dataBytes
-//                            .runFold(ByteString.empty) { case (acc, b) => acc ++ b }
-//                            .map(parse)
-//                    }
-
-
-                val inputStream = r.entity.dataBytes.runWith(
-                    StreamConverters.asInputStream(FiniteDuration(AppConfig.httpClientTimeout, TimeUnit.SECONDS))
-                )
-                IOUtils.toByteArray(inputStream)
-            })
+            .flatMap(response => response.entity.toStrict(60.second))
+            .map(b => b.getData().toArray)
 
     private def getWebPage(url: String): Future[Array[Byte]] = {
         val p = Promise[Array[Byte]]()

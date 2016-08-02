@@ -59,8 +59,7 @@ trait RequesterModule {
         private def fetchPage(page: Page, indexId: String): Future[Set[Page]] = {
             log.info(logMessage(s"Fetching data from url [${page.url}]", page))
 
-            httpClient.makeRequest(page.url, !page.props.exists(prop => prop.kind == PropType.Image)).map((pageBodyStream: Source[ByteString, Any]) => {
-                val pageBodyBytes = getPageBytes(pageBodyStream)
+            httpClient.makeRequest(page.url, !page.props.exists(prop => prop.kind == PropType.Image)).map((pageBodyBytes: Array[Byte]) => {
 
                 log.info(logMessage(s"Saving fetched data to the database", page))
                 if (indexId != null) {
@@ -97,13 +96,6 @@ trait RequesterModule {
                     nextPages
                 })
             })
-        }
-
-        private def getPageBytes(pageBodyStream: Source[ByteString, Any]): Array[Byte] = {
-            val inputStream = pageBodyStream.runWith(
-                StreamConverters.asInputStream(FiniteDuration(AppConfig.httpClientTimeout, TimeUnit.SECONDS))
-            )
-            IOUtils.toByteArray(inputStream)
         }
 
         private def getParent(page: Page, ref: String): Page = if (page.id.equals(ref)) page else getParent(page.parent, ref)

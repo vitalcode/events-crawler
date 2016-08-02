@@ -33,17 +33,10 @@ abstract class CrawlerTest(actorSystem: ActorSystem) extends TestKit(actorSystem
 
     protected def testSystem = CrawlerTest.actorSystem
 
-    //    protected def getPage(fileUrl: String): Future[HttpResponse] = {
-    //        Future {
-    //            val stream: InputStream = getClass.getResourceAsStream(fileUrl)
-    //            val b: Array[Byte] = Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
-    //            HttpResponse().withEntity(ContentTypes.`application/json`, b)
-    //        }
-    //    }
-    protected def getPage(fileUrl: String): Future[Source[ByteString, Any]] = {
+    protected def getPage(fileUrl: String): Future[Array[Byte]] = {
         Future {
-            //val stream: InputStream = getClass.getResourceAsStream(fileUrl)
-            StreamConverters.fromInputStream(() => getClass.getResourceAsStream(fileUrl), 1000000) //ByteString(scala.io.Source.fromInputStream(stream).mkString)) // TODO
+            val stream: InputStream = getClass.getResourceAsStream(fileUrl)
+            Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
         }
     }
 

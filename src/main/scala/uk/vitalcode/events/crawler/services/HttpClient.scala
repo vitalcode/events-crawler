@@ -7,25 +7,28 @@ import akka.http.scaladsl.Http
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
-import akka.stream.scaladsl.{Sink, Source}
+import akka.stream.scaladsl.{Sink, Source, StreamConverters}
 import akka.util.ByteString
+import org.apache.commons.io.IOUtils
+import org.apache.hadoop.hbase.util.Bytes
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
 import org.openqa.selenium.remote.DesiredCapabilities
 import uk.vitalcode.events.crawler.common.AppConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
+import scala.concurrent.duration.FiniteDuration
 import scala.concurrent.{Future, Promise}
 
 trait HttpClient {
-    def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]]
+    def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]]
 }
 
 class DefaultHttpClient(system: ActorSystem) extends HttpClient {
 
     implicit val materializer = ActorMaterializer.create(system)
 
-    override def makeRequest(url: String, phantom: Boolean): Future[Source[ByteString, Any]] = {
+    override def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]] = {
         if (phantom) getWebPage(url) else getImage(url)
     }
 
@@ -61,19 +64,24 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
             protocol = HttpProtocols.`HTTP/1.0`)
     }
 
-    private def getImage(url: String): Future[Source[ByteString, Any]] =
+    private def getImage(url: String): Future[Array[Byte]] =
         Http(system).singleRequest(buildHttpRequest(url))
-            .map(r => r.entity.dataBytes)
+            .map(r => {
+                val inputStream = r.entity.dataBytes.runWith(
+                    StreamConverters.asInputStream(FiniteDuration(AppConfig.httpClientTimeout, TimeUnit.SECONDS))
+                )
+                IOUtils.toByteArray(inputStream)
+            })
 
-    private def getWebPage(url: String): Future[Source[ByteString, Any]] = {
-        val p = Promise[Source[ByteString, Any]]()
+    private def getWebPage(url: String): Future[Array[Byte]] = {
+        val p = Promise[Array[Byte]]()
         Future {
             try {
                 val driver = createPhantomDriver()
                 driver.get(url)
                 val page = driver.getPageSource
                 driver.quit()
-                p.success(Source.single(ByteString(page)))
+                p.success(Bytes.toBytes(page))
             } catch {
                 case e: Exception =>
                     p.failure(e)

@@ -4,14 +4,9 @@ import java.util.concurrent.TimeUnit
 
 import akka.actor.ActorSystem
 import akka.http.scaladsl.Http
-import akka.http.scaladsl.model.HttpEntity.Strict
 import akka.http.scaladsl.model._
 import akka.http.scaladsl.model.headers._
 import akka.stream.ActorMaterializer
-import akka.stream.javadsl.Source
-import akka.stream.scaladsl.{Sink, Source, StreamConverters}
-import akka.util.ByteString
-import org.apache.commons.io.IOUtils
 import org.apache.hadoop.hbase.util.Bytes
 import org.openqa.selenium.Dimension
 import org.openqa.selenium.phantomjs.{PhantomJSDriver, PhantomJSDriverService}
@@ -19,9 +14,8 @@ import org.openqa.selenium.remote.DesiredCapabilities
 import uk.vitalcode.events.crawler.common.AppConfig
 
 import scala.concurrent.ExecutionContext.Implicits.global
-import scala.concurrent.duration.FiniteDuration
-import scala.concurrent.{Future, Promise}
 import scala.concurrent.duration._
+import scala.concurrent.{Future, Promise}
 
 trait HttpClient {
     def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]]

@@ -3,23 +3,24 @@ package uk.vitalcode.events.crawler.test.common
 import java.io.InputStream
 
 import akka.actor._
-import akka.http.scaladsl.model.{ContentTypes, HttpResponse}
-import akka.stream.IOResult
-import akka.stream.scaladsl.{Source, StreamConverters}
 import akka.testkit._
-import akka.util.ByteString
 import com.typesafe.config.ConfigFactory
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.hadoop.conf.Configuration
 import org.apache.hadoop.hbase._
 import org.apache.hadoop.hbase.client.{Admin, Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
-import org.apache.hadoop.hbase.util.Bytes
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, _}
+import uk.vitalcode.events.cambridge.VisitCambridge
+import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
+import uk.vitalcode.events.crawler.common.AppModule
+import uk.vitalcode.events.crawler.services.HttpClient
+import uk.vitalcode.events.model.Page
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
+import scala.concurrent.duration._
 
 abstract class CrawlerTest(actorSystem: ActorSystem) extends TestKit(actorSystem)
     with DefaultTimeout with ImplicitSender with WordSpecLike
@@ -28,10 +29,18 @@ abstract class CrawlerTest(actorSystem: ActorSystem) extends TestKit(actorSystem
     protected var hBaseConn: Connection = _
     protected var hBaseConf: Configuration = _
     protected val testTable: TableName = TableName.valueOf(TestConfig.hbaseTable)
+    protected val httpClientMock: HttpClient = mock[HttpClient]
 
     def this() = this(CrawlerTest.actorSystem)
 
     protected def testSystem = CrawlerTest.actorSystem
+
+    protected def mock(url: String, html: Boolean, path: String) = {
+        (httpClientMock.makeRequest _)
+            .expects(url, html)
+            .returns(getPage(path))
+            .once()
+    }
 
     protected def getPage(fileUrl: String): Future[Array[Byte]] = {
         Future {
@@ -40,11 +49,26 @@ abstract class CrawlerTest(actorSystem: ActorSystem) extends TestKit(actorSystem
         }
     }
 
+    protected def assert(page: Page): Unit = {
+        val managerModule = new AppModule with ManagerModule with RequesterModule {
+            override lazy val system = testSystem
+            override lazy val pages: Set[Page] = Set(page)
+            override lazy val hBaseConnection: Connection = hBaseConn
+            override lazy val httpClient: HttpClient = httpClientMock
+        }
+
+        within(20.seconds) {
+            val dispose = () => hBaseConn.close()
+            managerModule.managerRef ! dispose
+            expectNoMsg()
+        }
+    }
+
     private def createTestTable(): Unit = {
 
         val admin: Admin = hBaseConn.getAdmin
         if (admin.isTableAvailable(testTable)) {
-            if(!admin.isTableDisabled(testTable)) admin.disableTable(testTable)
+            if (!admin.isTableDisabled(testTable)) admin.disableTable(testTable)
             admin.deleteTable(testTable)
             logger.info(s"Test table [$testTable] deleted")
         }

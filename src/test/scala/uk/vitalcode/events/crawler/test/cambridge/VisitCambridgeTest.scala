@@ -1,21 +1,11 @@
-package uk.vitalcode.events.crawler.test
+package uk.vitalcode.events.crawler.test.cambridge
 
-import akka.actor._
-import org.apache.hadoop.hbase.client.Connection
 import uk.vitalcode.events.cambridge.VisitCambridge
-import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
-import uk.vitalcode.events.crawler.common.AppModule
-import uk.vitalcode.events.crawler.services.HttpClient
 import uk.vitalcode.events.crawler.test.common.CrawlerTest
-import uk.vitalcode.events.model.Page
 
-import scala.concurrent.duration._
-
-class ClientVisitCambridgeTest extends CrawlerTest {
+class VisitCambridgeTest extends CrawlerTest {
 
     "Client crawling visit cambridge web site" should {
-
-        val httpClientMock: HttpClient = mock[HttpClient]
 
         // page 1 list
         (httpClientMock.makeRequest _)
@@ -77,22 +67,8 @@ class ClientVisitCambridgeTest extends CrawlerTest {
             .returns(getPage("/clientVisitCambridgeTest/image.jpeg"))
             .once()
 
-
         "should fetch data from 8 web pages (2 page lists each with 2 links + 1 image each link" in {
-
-            val managerModule = new AppModule with ManagerModule with RequesterModule {
-                override lazy val system = testSystem
-                override lazy val pages: Set[Page] = Set(VisitCambridge.page)
-                override lazy val hBaseConnection: Connection = hBaseConn
-
-                override lazy val httpClient: HttpClient = httpClientMock
-            }
-
-            within(10.seconds) {
-                val dispose = () => hBaseConn.close()
-                managerModule.managerRef ! dispose
-                expectNoMsg()
-            }
+            assert(VisitCambridge.page)
         }
     }
 }

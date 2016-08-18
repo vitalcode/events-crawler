@@ -1,21 +1,11 @@
-package uk.vitalcode.events.crawler.test
+package uk.vitalcode.events.crawler.test.cambridge
 
-import akka.actor._
-import org.apache.hadoop.hbase.client.Connection
 import uk.vitalcode.events.cambridge.CambridgeScienceCentre
-import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
-import uk.vitalcode.events.crawler.common.AppModule
-import uk.vitalcode.events.crawler.services.HttpClient
 import uk.vitalcode.events.crawler.test.common.CrawlerTest
-import uk.vitalcode.events.model.Page
 
-import scala.concurrent.duration._
-
-class ClientCambridgeScienceCentreTest extends CrawlerTest {
+class ScienceCentreTest extends CrawlerTest {
 
     "Client crawling Cambridge science centre web site" should {
-
-        val httpClientMock: HttpClient = mock[HttpClient]
 
         // page 1 list
         (httpClientMock.makeRequest _)
@@ -109,19 +99,8 @@ class ClientCambridgeScienceCentreTest extends CrawlerTest {
 
         "should fetch data from 9 web pages (3 page lists each with 2 links)" in {
 
-            val managerModule = new AppModule with ManagerModule with RequesterModule {
-                override lazy val system = testSystem
-                override lazy val pages: Set[Page] = Set(CambridgeScienceCentre.page)
-                override lazy val hBaseConnection: Connection = hBaseConn
+            assert(CambridgeScienceCentre.page)
 
-                override lazy val httpClient: HttpClient = httpClientMock
-            }
-
-            within(10.seconds) {
-                val dispose = () => hBaseConn.close()
-                managerModule.managerRef ! dispose
-                expectNoMsg()
-            }
         }
     }
 }

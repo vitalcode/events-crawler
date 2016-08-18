@@ -1,24 +1,20 @@
 package uk.vitalcode.events.crawler.actormodel
 
 import java.net.URI
-import java.util.concurrent.TimeUnit
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, _}
 import akka.stream._
-import akka.stream.scaladsl.{Source, _}
-import akka.util.ByteString
 import com.softwaremill.macwire._
 import jodd.jerry.Jerry._
 import jodd.jerry.{Jerry, JerryNodeFunction}
 import jodd.lagarto.dom.Node
-import org.apache.commons.io.IOUtils
-import uk.vitalcode.events.crawler.common.{AppConfig, AppModule}
+import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 import uk.vitalcode.events.model.{Page, PropType}
 
+import scala.util.matching.Regex
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.concurrent.duration._
 import scala.util.{Failure, Success}
 
 case class FetchPage(page: Page, indexId: String)
@@ -85,7 +81,10 @@ trait RequesterModule {
                             val baseUri = new URI(page.url)
                             val childLinkUrl = node.getAttribute("href")
                             val childImageUrl = node.getAttribute("src")
-                            val childUri = if (childLinkUrl != null) new URI(childLinkUrl) else new URI(childImageUrl)
+                            val childStyle = node.getAttribute("style")
+                            val childStyleUrl = if (childStyle != null) """(?<=url\(\')(.*)(?=\'\))""".r.findFirstIn(childStyle) else null
+                            val childUri = if (childLinkUrl != null) new URI(childLinkUrl)
+                            else if (childImageUrl != null) new URI(childImageUrl) else new URI(childStyleUrl.get)
                             val resolvedUri = baseUri.resolve(childUri).toString
                             val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
                             log.info(logMessage(s"Adding child page [$newChildPage]", page))

@@ -36,6 +36,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         caps.setCapability("phantomjs.page.settings.loadImages", false)
         caps.setCapability("phantomjs.page.settings.userAgent", AppConfig.httpClientUserAgent)
         caps.setCapability("phantomjs.page.settings.resourceTimeout", AppConfig.httpClientTimeout)
+        caps.setCapability(PhantomJSDriverService.PHANTOMJS_GHOSTDRIVER_CLI_ARGS, "--logLevel=NONE")
         caps.setCapability(PhantomJSDriverService.PHANTOMJS_EXECUTABLE_PATH_PROPERTY, AppConfig.httpClientPhantomPath)
 
         val driver = new PhantomJSDriver(caps)

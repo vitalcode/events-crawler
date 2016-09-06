@@ -25,7 +25,7 @@ trait RequesterModule {
 
     lazy val requesterRef: ActorRef = system.actorOf(Props(wire[Requester]))
 
-    class Requester(httpClient: HttpClient, hBaseService: HBaseService) extends Actor with ActorLogging {
+    class Requester extends Actor with ActorLogging {
 
         final implicit val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 

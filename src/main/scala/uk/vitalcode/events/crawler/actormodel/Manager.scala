@@ -14,7 +14,7 @@ trait ManagerModule {
 
     def requesterFactory = () => requesterRef
 
-    class Manager(requester: ActorRef, pages: Set[Page]) extends Actor with ActorLogging {
+    class Manager extends Actor with ActorLogging {
 
         var completed: Boolean = false
 
@@ -38,7 +38,7 @@ trait ManagerModule {
                 dispose = disposeFunction
                 pages.foreach((page: Page) => {
                     addCountDown()
-                    requester ! FetchPage(page, null)
+                    requesterFactory() ! FetchPage(page, null)
                 })
             case finish: Boolean =>
                 log.info("Manager completes job")

@@ -29,6 +29,8 @@ trait RequesterModule {
 
         final implicit val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
+        override def postStop(): Unit = httpClient.dispose()
+
         def receive = {
             case FetchPage(page, indexId) =>
                 val senderRef = sender

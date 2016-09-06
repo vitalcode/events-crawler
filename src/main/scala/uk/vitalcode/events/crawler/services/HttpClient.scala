@@ -19,6 +19,8 @@ import scala.concurrent.{Future, Promise}
 
 trait HttpClient {
     def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]]
+
+    def dispose(): Unit
 }
 
 class DefaultHttpClient(system: ActorSystem) extends HttpClient {
@@ -29,7 +31,9 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         if (phantom) getWebPage(url) else getImage(url)
     }
 
-    private lazy val phantomDriver: PhantomJSDriver = {
+    override def dispose() = phantomDriver.quit()
+
+    private val phantomDriver: PhantomJSDriver = {
         val caps = new DesiredCapabilities()
         caps.setJavascriptEnabled(true)
         caps.setCapability("phantomjs.page.settings.takesScreenshot", false)
@@ -71,11 +75,8 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         val p = Promise[Array[Byte]]()
         Future {
             try {
-                val driver = phantomDriver
-                driver.get(url)
-                val page = driver.getPageSource
-                //driver.quit() // todo close driver resource
-                p.success(Bytes.toBytes(page))
+                phantomDriver.get(url)
+                p.success(Bytes.toBytes(phantomDriver.getPageSource))
             } catch {
                 case e: Exception =>
                     p.failure(e)

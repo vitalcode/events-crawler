@@ -12,7 +12,6 @@ import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.services.{HBaseService, HttpClient}
 import uk.vitalcode.events.model.{Page, PropType}
 
-import scala.util.matching.Regex
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
 import scala.util.{Failure, Success}

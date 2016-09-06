@@ -29,7 +29,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         if (phantom) getWebPage(url) else getImage(url)
     }
 
-    private def createPhantomDriver(): PhantomJSDriver = {
+    private lazy val phantomDriver: PhantomJSDriver = {
         val caps = new DesiredCapabilities()
         caps.setJavascriptEnabled(true)
         caps.setCapability("phantomjs.page.settings.takesScreenshot", false)
@@ -71,10 +71,10 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         val p = Promise[Array[Byte]]()
         Future {
             try {
-                val driver = createPhantomDriver()
+                val driver = phantomDriver
                 driver.get(url)
                 val page = driver.getPageSource
-                driver.quit()
+                //driver.quit() // todo close driver resource
                 p.success(Bytes.toBytes(page))
             } catch {
                 case e: Exception =>

@@ -12,7 +12,6 @@ import org.apache.hadoop.hbase.client.{Admin, Connection, ConnectionFactory}
 import org.apache.hadoop.hbase.mapreduce.TableInputFormat
 import org.scalamock.scalatest.MockFactory
 import org.scalatest.{BeforeAndAfterAll, Matchers, _}
-import uk.vitalcode.events.cambridge.VisitCambridge
 import uk.vitalcode.events.crawler.actormodel.{ManagerModule, RequesterModule}
 import uk.vitalcode.events.crawler.common.AppModule
 import uk.vitalcode.events.crawler.services.HttpClient

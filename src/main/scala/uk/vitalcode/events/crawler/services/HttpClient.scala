@@ -60,7 +60,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
 
         HttpRequest(
-            uri = url,
+            uri = url.substring(0, url.indexOf('#')),
             method = HttpMethods.GET,
             headers = List(acceptEncoding, accept, userAgent),
             protocol = HttpProtocols.`HTTP/1.0`)

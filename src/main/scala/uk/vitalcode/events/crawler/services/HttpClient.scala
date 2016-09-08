@@ -59,8 +59,10 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
                 MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
         val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
 
+        val hashIndex = url.indexOf('#')
+
         HttpRequest(
-            uri = url.substring(0, url.indexOf('#')),
+            uri = if (hashIndex == -1) url else url.substring(0, hashIndex),
             method = HttpMethods.GET,
             headers = List(acceptEncoding, accept, userAgent),
             protocol = HttpProtocols.`HTTP/1.0`)

@@ -31,9 +31,9 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         if (phantom) getWebPage(url) else getImage(url)
     }
 
-    override def dispose() = phantomDriver.quit()
+   // override def dispose() = phantomDriver.quit()
 
-    private val phantomDriver: PhantomJSDriver = {
+    private def createPhantomDriver(): PhantomJSDriver = {
         val caps = new DesiredCapabilities()
         caps.setJavascriptEnabled(true)
         caps.setCapability("phantomjs.page.settings.takesScreenshot", false)
@@ -59,7 +59,7 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
                 MediaRange(MediaTypes.`application/xhtml+xml`), MediaRange(MediaTypes.`image/webp`)))
         val userAgent = headers.`User-Agent`(AppConfig.httpClientUserAgent)
 
-        val hashIndex = url.indexOf('#')
+        val hashIndex = url.indexOf('#') // TODO remove
 
         HttpRequest(
             uri = if (hashIndex == -1) url else url.substring(0, hashIndex),
@@ -77,8 +77,11 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
         val p = Promise[Array[Byte]]()
         Future {
             try {
+                val phantomDriver = createPhantomDriver()
                 phantomDriver.get(url)
-                p.success(Bytes.toBytes(phantomDriver.getPageSource))
+                val page = p.success(Bytes.toBytes(phantomDriver.getPageSource))
+                phantomDriver.quit()
+                page
             } catch {
                 case e: Exception =>
                     p.failure(e)

@@ -19,8 +19,6 @@ import scala.concurrent.{Future, Promise}
 
 trait HttpClient {
     def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]]
-
-    def dispose(): Unit
 }
 
 class DefaultHttpClient(system: ActorSystem) extends HttpClient {
@@ -30,8 +28,6 @@ class DefaultHttpClient(system: ActorSystem) extends HttpClient {
     override def makeRequest(url: String, phantom: Boolean): Future[Array[Byte]] = {
         if (phantom) getWebPage(url) else getImage(url)
     }
-
-   // override def dispose() = phantomDriver.quit()
 
     private def createPhantomDriver(): PhantomJSDriver = {
         val caps = new DesiredCapabilities()

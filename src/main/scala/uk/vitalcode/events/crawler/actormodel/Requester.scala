@@ -14,7 +14,7 @@ import uk.vitalcode.events.model.{Page, PropType}
 
 import scala.concurrent.ExecutionContext.Implicits.global
 import scala.concurrent.Future
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 case class FetchPage(page: Page, indexId: String)
 
@@ -29,11 +29,13 @@ trait RequesterModule {
 
         final implicit val materializer: ActorMaterializer = ActorMaterializer(ActorMaterializerSettings(context.system))
 
+        override def postStop(): Unit = httpClient.dispose()
+
         def receive = {
             case FetchPage(page, indexId) =>
                 val senderRef = sender
                 val newIndexId = if (page.isRow) page.url else indexId
-                fetchPage(page, newIndexId).onComplete {
+                fetchPage(page, newIndexId) match {
                     case Success(nextPages) => {
                         if (nextPages.nonEmpty) {
                             log.info(logMessage(s"Sending fetching request for ${nextPages.size} child pages", page))
@@ -51,48 +53,47 @@ trait RequesterModule {
                 sender ! false
         }
 
-        private def fetchPage(page: Page, indexId: String): Future[Set[Page]] = {
+        private def fetchPage(page: Page, indexId: String): Try[Set[Page]] = Try {
             log.info(logMessage(s"Fetching data from url [${page.url}]", page))
 
-            httpClient.makeRequest(page.url, !page.props.exists(prop => prop.kind == PropType.Image)).map((pageBodyBytes: Array[Byte]) => {
+            val pageBodyBytes: Array[Byte] = httpClient.makeRequest(page.url, !page.props.exists(prop => prop.kind == PropType.Image))
 
-                log.info(logMessage(s"Saving fetched data to the database", page))
-                if (indexId != null) {
-                    hBaseService.saveData(page, pageBodyBytes, indexId)
-                }
+            log.info(logMessage(s"Saving fetched data to the database", page))
+            if (indexId != null) {
+                hBaseService.saveData(page, pageBodyBytes, indexId)
+            }
 
-                val childPages = if (page.ref == null) {
-                    log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
-                    page.pages
-                } else {
-                    val parentPage = getParent(page, page.ref)
-                    log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent $parentPage", page))
-                    parentPage.pages
-                }
+            val childPages = if (page.ref == null) {
+                log.info(logMessage(s"Got [${page.pages.size}] child pages of the current page", page))
+                page.pages
+            } else {
+                val parentPage = getParent(page, page.ref)
+                log.info(logMessage(s"Got[${parentPage.pages.size}] child pages of the parent $parentPage", page))
+                parentPage.pages
+            }
 
-                val dom: Jerry = jerry(new String(pageBodyBytes, "UTF-8"))
+            val dom: Jerry = jerry(new String(pageBodyBytes, "UTF-8"))
 
-                childPages.flatMap(childPage => {
-                    var nextPages = Set.empty[Page]
-                    log.info(logMessage(s"Found child css link [${childPage.link}]", page))
-                    dom.$(childPage.link).each(new JerryNodeFunction {
-                        override def onNode(node: Node, index: Int): Boolean = {
-                            val baseUri = new URI(page.url)
-                            val childLinkUrl = node.getAttribute("href")
-                            val childImageUrl = node.getAttribute("src")
-                            val childStyle = node.getAttribute("style")
-                            val childStyleUrl = if (childStyle != null) """(?<=url\(\')(.*)(?=\'\))""".r.findFirstIn(childStyle) else null
-                            val childUri = if (childLinkUrl != null) new URI(childLinkUrl)
-                            else if (childImageUrl != null) new URI(childImageUrl) else new URI(childStyleUrl.get)
-                            val resolvedUri = baseUri.resolve(childUri).toString
-                            val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
-                            log.info(logMessage(s"Adding child page [$newChildPage]", page))
-                            nextPages += newChildPage
-                            true
-                        }
-                    })
-                    nextPages
+            childPages.flatMap(childPage => {
+                var nextPages = Set.empty[Page]
+                log.info(logMessage(s"Found child css link [${childPage.link}]", page))
+                dom.$(childPage.link).each(new JerryNodeFunction {
+                    override def onNode(node: Node, index: Int): Boolean = {
+                        val baseUri = new URI(page.url)
+                        val childLinkUrl = node.getAttribute("href")
+                        val childImageUrl = node.getAttribute("src")
+                        val childStyle = node.getAttribute("style")
+                        val childStyleUrl = if (childStyle != null) """(?<=url\(\')(.*)(?=\'\))""".r.findFirstIn(childStyle) else null
+                        val childUri = if (childLinkUrl != null) new URI(childLinkUrl)
+                        else if (childImageUrl != null) new URI(childImageUrl) else new URI(childStyleUrl.get)
+                        val resolvedUri = baseUri.resolve(childUri).toString
+                        val newChildPage = Page(childPage.id, childPage.ref, resolvedUri, childPage.link, childPage.props, childPage.pages, childPage.parent, childPage.isRow)
+                        log.info(logMessage(s"Adding child page [$newChildPage]", page))
+                        nextPages += newChildPage
+                        true
+                    }
                 })
+                nextPages
             })
         }
 

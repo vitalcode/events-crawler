@@ -41,11 +41,9 @@ abstract class CrawlerTest(actorSystem: ActorSystem) extends TestKit(actorSystem
             .once()
     }
 
-    protected def getPage(fileUrl: String): Future[Array[Byte]] = {
-        Future {
-            val stream: InputStream = getClass.getResourceAsStream(fileUrl)
-            Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
-        }
+    protected def getPage(fileUrl: String): Array[Byte] = {
+        val stream: InputStream = getClass.getResourceAsStream(fileUrl)
+        Stream.continually(stream.read).takeWhile(_ != -1).map(_.toByte).toArray
     }
 
     protected def assert(page: Page): Unit = {
